@@ -8,15 +8,25 @@ namespace SeymuPriceCalculator.Models
 {
     public class Pieza
     {
-        public double LargoEnVaras { get; set; }
-        public double AnchoEnPulgadas { get; set; }
-        public double GrosorEnPulgadas { get; set; }
+        public string TipoMadera { get; set; } = string.Empty;
 
-        public double TotalPulgadas
+        public double Largo { get; set; }
+        public double TotalAncho { get; set; }
+        public double Grosor { get; set; }
+        public double Precio { get; set; }
+
+        public double TotalBase
         {
             get
             {
-                return LargoEnVaras * 36 * AnchoEnPulgadas * GrosorEnPulgadas;
+                return TotalAncho * Largo * Grosor;
+            }
+        }
+        public double Total
+        {
+            get
+            {
+                return TotalAncho * Largo * Grosor * Precio;
             }
         }
     }
