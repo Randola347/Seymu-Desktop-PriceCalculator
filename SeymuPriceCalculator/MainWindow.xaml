@@ -4,9 +4,85 @@
         Title="Seymu - Calculadora de Madera"
         Height="650"
         Width="1100"
-        WindowStartupLocation="CenterScreen">
+        WindowStartupLocation="CenterScreen"
+        WindowState="Maximized"
+    FontSize="18"
+        TextOptions.TextFormattingMode="Display"
+        TextOptions.TextRenderingMode="ClearType">
 
-    <Grid Margin="20">
+    <Window.Resources>
+    <SolidColorBrush x:Key="VerdePrimario" Color="#2D6A27"/>
+        <SolidColorBrush x:Key="VerdeHover" Color="#24541F"/>
+        <SolidColorBrush x:Key="BeigeFondo" Color="#F5F0E8"/>
+        <SolidColorBrush x:Key="GrisBorde" Color="#D0D0D0"/>
+
+        <!-- 🏷 Estilo etiquetas -->
+        <Style x:Key="Etiqueta" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource VerdePrimario}"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="19"/>
+            <Setter Property="Margin" Value="0,4,0,10"/>
+        </Style>
+
+        <!-- 📦 Estilo TextBox global -->
+        <Style TargetType="TextBox">
+            <Setter Property="Height" Value="34"/>
+            <Setter Property="FontSize" Value="20"/>
+            <Setter Property="Margin" Value="0,6,0,14"/>
+            <Setter Property="BorderBrush" Value="{StaticResource GrisBorde}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="10,6"/>
+        </Style>
+
+        <!-- 📦 Estilo ComboBox global -->
+        <Style TargetType="ComboBox">
+            <Setter Property="Height" Value="34"/>
+            <Setter Property="FontSize" Value="20"/>
+            <Setter Property="Margin" Value="0,4,0,10"/>
+            <Setter Property="BorderBrush" Value="{StaticResource GrisBorde}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="10,6"/>
+        </Style>
+
+        <!-- 🟢 Botón verde (con hover) -->
+        <Style x:Key="BotonVerde" TargetType="Button">
+            <Setter Property="Background" Value="{StaticResource VerdePrimario}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="10"
+                                Padding="14,8">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{StaticResource VerdeHover}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- 🔵 Botón Azul -->
+        <Style x:Key="BotonAzul" TargetType="Button" BasedOn="{StaticResource BotonVerde}">
+            <Setter Property="Background" Value="#2980B9"/>
+        </Style>
+
+        <!-- ⚪ Botón Gris -->
+        <Style x:Key="BotonGris" TargetType="Button" BasedOn="{StaticResource BotonVerde}">
+            <Setter Property="Background" Value="#7F8C8D"/>
+        </Style>
+    </Window.Resources>
+
+    <!-- ================= LAYOUT ================= -->
+    <Grid Margin="5" Background="{StaticResource BeigeFondo}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -15,16 +91,23 @@
         </Grid.RowDefinitions>
 
         <!-- Título -->
-        <TextBlock Text="Calculadora de Precios - SEYMU"
-                   FontSize="28"
-                   FontWeight="Bold"
-                   Foreground="#2C3E50"
-                   Margin="0,0,0,25"/>
+        <Border Background="{StaticResource VerdePrimario}"
+        CornerRadius="10"
+        Padding="10"
+        Margin="0,0,0,15">
+
+            <TextBlock Text="SEYMU"
+               FontSize="28"
+               FontWeight="Bold"
+               Foreground="White"
+               VerticalAlignment="Center"/>
+
+        </Border>
 
         <!-- ================= DATOS CLIENTE ================= -->
         <GroupBox Header="Datos del Cliente"
                   Grid.Row="1"
-                  Margin="0,0,0,20"
+                  Margin="0,0,0,10"
                   Padding="10">
 
             <Grid>
@@ -36,171 +119,199 @@
                     <ColumnDefinition Width="250"/>
                 </Grid.ColumnDefinitions>
 
-                <TextBlock Text="Nombre:" VerticalAlignment="Center"/>
+                <TextBlock Text="Nombre:" VerticalAlignment="Center" Style="{StaticResource Etiqueta}"/>
                 <TextBox x:Name="txtNombre"
                          Grid.Column="1"
-                         Height="28"
                          PreviewTextInput="SoloLetras"/>
 
                 <TextBlock Text="Teléfono:"
                            Grid.Column="3"
-                           VerticalAlignment="Center"/>
+                           VerticalAlignment="Center"
+                           Style="{StaticResource Etiqueta}"/>
                 <TextBox x:Name="txtTelefono"
                          Grid.Column="4"
-                         Height="28"
                          PreviewTextInput="SoloNumeros"/>
             </Grid>
         </GroupBox>
 
+
         <!-- ================= INGRESO PIEZAS ================= -->
         <GroupBox Header="Ingreso de Piezas"
-                  Grid.Row="2"
-                  Padding="15">
+          Grid.Row="2"
+          Padding="0">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
 
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="340"/>
-                    <ColumnDefinition Width="20"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="360"/>
+                <ColumnDefinition Width="15"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
 
-                <!-- PANEL IZQUIERDO -->
-                <StackPanel Grid.Column="0">
+            <!-- PANEL IZQUIERDO -->
+            <Grid Grid.Column="0"
+                  Grid.Row="0"
+                  VerticalAlignment="Stretch">
+                
+                <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
 
-                    <TextBlock Text="Tipo de Madera"/>
-                    <ComboBox x:Name="cmbMadera"
-                              SelectedIndex="0"
-                              Height="28"
-                              Margin="0,5,0,15">
-                        <ComboBoxItem Content="Cedro"/>
-                        <ComboBoxItem Content="Guanacaste"/>
-                        <ComboBoxItem Content="Melina"/>
-                        <ComboBoxItem Content="Teca"/>
-                        <ComboBoxItem Content="Caobilla"/>
-                        <ComboBoxItem Content="Cenizaro"/>
-                        <ComboBoxItem Content="Laurel"/>
-                        <ComboBoxItem Content="Pino"/>
-                    </ComboBox>
+                    <!-- Tipo -->
+                    <StackPanel Grid.Row="0">
+                        <TextBlock Text="Tipo de Madera" Style="{StaticResource Etiqueta}"/>
+                        <ComboBox x:Name="cmbMadera" SelectedIndex="0">
+                            <ComboBoxItem Content="Cedro"/>
+                            <ComboBoxItem Content="Guanacaste"/>
+                            <ComboBoxItem Content="Melina"/>
+                            <ComboBoxItem Content="Teca"/>
+                            <ComboBoxItem Content="Caobilla"/>
+                            <ComboBoxItem Content="Cenizaro"/>
+                            <ComboBoxItem Content="Laurel"/>
+                            <ComboBoxItem Content="Pino"/>
+                        </ComboBox>
+                    </StackPanel>
 
-                    <TextBlock Text="Largo (Decimal)"/>
-                    <TextBox x:Name="txtLargo"
-                             Height="28"
-                             Margin="0,5,0,15"
-                             PreviewTextInput="SoloDecimal"/>
+                    <!-- Largo -->
+                    <StackPanel Grid.Row="1">
+                        <TextBlock Text="Largo" Style="{StaticResource Etiqueta}"/>
+                        <TextBox x:Name="txtLargo" PreviewTextInput="SoloDecimal"/>
+                    </StackPanel>
 
-                    <TextBlock Text="Anchos (Ej: 10-7-5-9)"/>
-                    <TextBox x:Name="txtAnchos"
-                             Height="28"
-                             Margin="0,5,0,15"
-                             PreviewTextInput="SoloNumerosYGuion"/>
+                    <!-- Anchos -->
+                    <StackPanel Grid.Row="2">
+                        <TextBlock Text="Anchos (Ej: 10-7-5-9)" Style="{StaticResource Etiqueta}"/>
+                        <TextBox x:Name="txtAnchos" PreviewTextInput="SoloNumerosYGuion"/>
+                    </StackPanel>
 
-                    <TextBlock Text="Grosor (Pulgadas)"/>
-                    <ComboBox x:Name="cmbGrosor"
-                              Height="28"
-                              Margin="0,5,0,15"
-                              SelectedIndex="0">
-                        <ComboBoxItem Content="0.5"/>
-                        <ComboBoxItem Content="1"/>
-                        <ComboBoxItem Content="1.5"/>
-                        <ComboBoxItem Content="1.75"/>
-                        <ComboBoxItem Content="1.125"/>
-                        <ComboBoxItem Content="2"/>
-                        <ComboBoxItem Content="3"/>
-                    </ComboBox>
+                    <!-- Grosor -->
+                    <StackPanel Grid.Row="3">
+                        <TextBlock Text="Grosor (Pulgadas)" Style="{StaticResource Etiqueta}"/>
+                        <ComboBox x:Name="cmbGrosor" SelectedIndex="0">
+                            <ComboBoxItem Content="0.5"/>
+                            <ComboBoxItem Content="1"/>
+                            <ComboBoxItem Content="1.5"/>
+                            <ComboBoxItem Content="1.75"/>
+                            <ComboBoxItem Content="1.125"/>
+                            <ComboBoxItem Content="2"/>
+                            <ComboBoxItem Content="3"/>
+                        </ComboBox>
+                    </StackPanel>
 
-                    <TextBlock Text="Precio por Pulgada"/>
-                    <TextBox x:Name="txtPrecio"
-                             Height="28"
-                             Margin="0,5,0,20"
-                             PreviewTextInput="SoloDecimal"/>
+                    <!-- Precio -->
+                    <StackPanel Grid.Row="4">
+                        <TextBlock Text="Precio por Pulgada" Style="{StaticResource Etiqueta}"/>
+                        <TextBox x:Name="txtPrecio" PreviewTextInput="SoloDecimal"/>
+                    </StackPanel>
 
-                    <!-- BOTONES -->
-                    <StackPanel Orientation="Horizontal">
+                    <!-- Botones -->
+                    <StackPanel Grid.Row="5" Orientation="Horizontal" Margin="0,8,0,0">
 
                         <Button x:Name="btnAgregar"
-                                Content="Agregar"
-                                Width="110"
-                                Height="40"
-                                Background="#27AE60"
-                                Foreground="White"
-                                FontWeight="Bold"
-                                Click="AgregarPieza_Click"/>
+                Content="Agregar"
+                Width="120"
+                Style="{StaticResource BotonVerde}"
+                Click="AgregarPieza_Click"/>
 
                         <Button x:Name="btnGuardar"
-                                Content="Guardar"
-                                Width="100"
-                                Height="40"
-                                Background="#2980B9"
-                                Foreground="White"
-                                FontWeight="Bold"
-                                Margin="10,0,0,0"
-                                Click="GuardarEdicion_Click"
-                                Visibility="Collapsed"/>
+                Content="Guardar"
+                Width="120"
+                Margin="10,0,0,0"
+                Style="{StaticResource BotonAzul}"
+                Click="GuardarEdicion_Click"
+                Visibility="Collapsed"/>
 
                         <Button x:Name="btnCancelar"
-                                Content="Cancelar"
-                                Width="100"
-                                Height="40"
-                                Background="#7F8C8D"
-                                Foreground="White"
-                                FontWeight="Bold"
-                                Margin="10,0,0,0"
-                                Click="CancelarEdicion_Click"
-                                Visibility="Collapsed"/>
+                Content="Cancelar"
+                Width="120"
+                Margin="10,0,0,0"
+                Style="{StaticResource BotonGris}"
+                Click="CancelarEdicion_Click"
+                Visibility="Collapsed"/>
 
                     </StackPanel>
 
-                </StackPanel>
-
+                </Grid>
                 <!-- ================= TABLA ================= -->
-                <DataGrid x:Name="dgPiezas"
-                          Grid.Column="2"
-                          AutoGenerateColumns="False"
-                          IsReadOnly="True"
-                          RowHeight="30"
-                          HeadersVisibility="Column"
-                          AlternatingRowBackground="#F2F2F2">
+             <DataGrid x:Name="dgPiezas"
+             Grid.Column="2"
+          AutoGenerateColumns="False"
+          IsReadOnly="True"
+          FontSize="18"
+          RowHeight="40"
+          ColumnHeaderHeight="42"
+          HeadersVisibility="Column"
+          AlternatingRowBackground="#F2F2F2"
+          HorizontalAlignment="Stretch">
 
                     <DataGrid.Columns>
 
                         <DataGridTextColumn Header="#"
-                                            Binding="{Binding Numero}"
-                                            Width="40"/>
+                    Binding="{Binding Numero}"
+                    Width="30"/>
 
-                        <DataGridTextColumn Header="Tipo Madera"
-                                            Binding="{Binding TipoMadera}"
-                                            Width="110"/>
+                        <DataGridTextColumn Header="Madera"
+                    Binding="{Binding TipoMadera}"
+                    Width="105"/>
 
                         <DataGridTextColumn Header="Anchos"
-                                            Binding="{Binding Anchos}"
-                                            Width="90"/>
+                    Binding="{Binding Anchos}"
+                    Width="*"/>
 
                         <DataGridTextColumn Header="Largo"
-                                            Binding="{Binding Largo}"
-                                            Width="70"/>
+                    Binding="{Binding Largo}"
+                    Width="60"/>
 
                         <DataGridTextColumn Header="Total Ancho"
-                                            Binding="{Binding TotalAncho}"
-                                            Width="90"/>
+                    Binding="{Binding TotalAncho}"
+                    Width="110"/>
 
                         <DataGridTextColumn Header="Grosor"
-                                            Binding="{Binding Grosor}"
-                                            Width="70"/>
+                    Binding="{Binding Grosor}"
+                    Width="65"/>
 
-                        <DataGridTextColumn Header="Total Pulgadas"
-                                            Binding="{Binding TotalBase}"
-                                            Width="110"/>
+                        <DataGridTextColumn Header="Pulgadas"
+                    Binding="{Binding TotalBase}"
+                    Width="110"/>
 
                         <DataGridTextColumn Header="Precio"
-                                            Binding="{Binding Precio}"
-                                            Width="80"/>
+                    Binding="{Binding Precio, StringFormat='₡ {0:N2}'}"
+                    Width="110">
+
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Foreground" Value="#2980B9"/>
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                    <Setter Property="HorizontalAlignment" Value="Right"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+
+                        </DataGridTextColumn>
 
                         <DataGridTextColumn Header="Total"
-                                            Binding="{Binding Total}"
-                                            Width="100"/>
+                    Binding="{Binding Precio, StringFormat='₡ {0:N2}'}"
+                    Width="110">
+
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Foreground" Value="Blue"/>
+                                    <Setter Property="FontWeight" Value="Bold"/>
+                                    <Setter Property="HorizontalAlignment" Value="Right"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+
+                        </DataGridTextColumn>
 
                         <!-- ACCIONES -->
-                        <DataGridTemplateColumn Header="Acciones" Width="170">
+                        <DataGridTemplateColumn Header="Acciones" Width="180">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal">
@@ -236,33 +347,22 @@
         <StackPanel Grid.Row="3"
                     Orientation="Horizontal"
                     HorizontalAlignment="Right"
-                    Margin="0,20,0,0">
+                    Margin="0,8,0,0">
 
-            <TextBlock Text="Subtotal: "
-                       FontWeight="Bold"
-                       Margin="10,0"/>
+            <TextBlock Text="Subtotal: " FontWeight="Bold" Margin="10,0"/>
+            <TextBlock x:Name="lblSubtotal" Margin="10,0"/>
 
-            <TextBlock x:Name="lblSubtotal"
-                       Margin="10,0"/>
+            <TextBlock Text="IVA (13%): " FontWeight="Bold" Margin="30,0"/>
+            <TextBlock x:Name="lblIVA" Margin="10,0"/>
 
-            <TextBlock Text="IVA (13%): "
-                       FontWeight="Bold"
-                       Margin="30,0"/>
-
-            <TextBlock x:Name="lblIVA"
-                       Margin="10,0"/>
-
-            <TextBlock Text="Total: "
-                       FontWeight="Bold"
-                       Margin="30,0"/>
-
+            <TextBlock Text="Total: " FontWeight="Bold" Margin="30,0"/>
             <TextBlock x:Name="lblTotal"
-                       FontSize="16"
-                       Foreground="#E74C3C"
+                       FontSize="24"
+                       Foreground="Blue"
                        FontWeight="Bold"
                        Margin="10,0"/>
-
         </StackPanel>
 
     </Grid>
+
 </Window>
