@@ -1,58 +1,52 @@
-﻿using System.Text;
+﻿using SeymuPriceCalculator.Models;
+using System.Collections.ObjectModel;
+using System.Globalization;
+using System.Linq;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using SeymuPriceCalculator.Models;
-using System.Collections.Generic;
-using System.Text.RegularExpressions;
-using System.Globalization;
+
 namespace SeymuPriceCalculator
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
-    /// using SeymuPriceCalculator.Models;
-    
     public partial class MainWindow : Window
-   
     {
+        private ObservableCollection<Pieza> piezas = new ObservableCollection<Pieza>();
 
         public MainWindow()
         {
             InitializeComponent();
+            dgPiezas.ItemsSource = piezas;
         }
-        private Cotizacion cotizacionActual = new Cotizacion();
+
         private void AgregarPieza_Click(object sender, RoutedEventArgs e)
         {
+            // Validar largo
             if (!double.TryParse(txtLargo.Text, NumberStyles.Any, CultureInfo.InvariantCulture, out double largo) || largo <= 0)
             {
-                MessageBox.Show("Ingrese un largo válido (Ej: 0.375, 1.2, etc).");
+                MessageBox.Show("Ingrese un largo válido.");
                 return;
             }
 
+            // Validar precio
             if (!double.TryParse(txtPrecio.Text, NumberStyles.Any, CultureInfo.InvariantCulture, out double precio) || precio <= 0)
             {
                 MessageBox.Show("Ingrese un precio válido.");
                 return;
             }
 
-            if (cmbGrosor.SelectedItem == null)
+            // Validar grosor seguro
+            if (cmbGrosor.SelectedItem is not ComboBoxItem grosorItem)
             {
                 MessageBox.Show("Seleccione un grosor.");
                 return;
             }
 
-            double grosor = double.Parse(((ComboBoxItem)cmbGrosor.SelectedItem).Content.ToString(), CultureInfo.InvariantCulture);
+            double grosor = double.Parse(
+                grosorItem.Content?.ToString() ?? "0",
+                CultureInfo.InvariantCulture);
 
-
-
-            // Procesar anchos separados por -
+            // Validar anchos
             if (string.IsNullOrWhiteSpace(txtAnchos.Text))
             {
                 MessageBox.Show("Ingrese al menos un ancho.");
@@ -60,56 +54,117 @@ namespace SeymuPriceCalculator
             }
 
             string[] partes = txtAnchos.Text.Split('-');
-
             double totalAncho = 0;
 
             foreach (var parte in partes)
             {
-                if (!double.TryParse(parte.Trim(), out double valor) || valor <= 0)
+                if (!double.TryParse(parte.Trim(), NumberStyles.Any, CultureInfo.InvariantCulture, out double valor) || valor <= 0)
                 {
-                    MessageBox.Show("Formato de anchos inválido. Ejemplo correcto: 10-7-5-9");
+                    MessageBox.Show("Formato de anchos inválido.");
                     return;
                 }
 
                 totalAncho += valor;
             }
 
+            // Obtener tipo madera seguro
+            string tipoMadera = "";
+
+            if (cmbMadera.SelectedItem is ComboBoxItem maderaItem)
+            {
+                tipoMadera = maderaItem.Content?.ToString() ?? "";
+            }
+
             Pieza nuevaPieza = new Pieza
             {
-                TipoMadera = ((ComboBoxItem)cmbMadera.SelectedItem).Content.ToString(),
+                Numero = piezas.Count + 1,
+                TipoMadera = tipoMadera,
+                Anchos = txtAnchos.Text,
                 Largo = largo,
                 TotalAncho = totalAncho,
                 Grosor = grosor,
                 Precio = precio
             };
 
-            cotizacionActual.Piezas.Add(nuevaPieza);
+            piezas.Add(nuevaPieza);
 
-            dgPiezas.ItemsSource = null;
-            dgPiezas.ItemsSource = cotizacionActual.Piezas;
-
-            lblSubtotal.Text = cotizacionActual.Subtotal.ToString("C");
-            lblIVA.Text = cotizacionActual.IVA.ToString("C");
-            lblTotal.Text = cotizacionActual.TotalFinal.ToString("C");
+            RenumerarPiezas();
+            ActualizarTotales();
 
             txtLargo.Clear();
             txtAnchos.Clear();
         }
+
+        private void RenumerarPiezas()
+        {
+            for (int i = 0; i < piezas.Count; i++)
+            {
+                piezas[i].Numero = i + 1;
+            }
+
+            dgPiezas.Items.Refresh();
+        }
+
+        private void ActualizarTotales()
+        {
+            double subtotal = piezas.Sum(p => p.Total);
+            double iva = subtotal * 0.13;
+            double total = subtotal + iva;
+
+            lblSubtotal.Text = subtotal.ToString("C");
+            lblIVA.Text = iva.ToString("C");
+            lblTotal.Text = total.ToString("C");
+        }
+
+        private void EliminarPieza_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not Button boton)
+                return;
+
+            if (boton.Tag is not Pieza pieza)
+                return;
+
+            var resultado = MessageBox.Show(
+                "¿Desea eliminar esta pieza?",
+                "Confirmar eliminación",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (resultado == MessageBoxResult.Yes)
+            {
+                piezas.Remove(pieza);
+                RenumerarPiezas();
+                ActualizarTotales();
+            }
+        }
+
         private void SoloLetras(object sender, TextCompositionEventArgs e)
         {
             Regex regex = new Regex("^[a-zA-ZáéíóúÁÉÍÓÚñÑ ]+$");
             e.Handled = !regex.IsMatch(e.Text);
         }
+
         private void SoloNumeros(object sender, TextCompositionEventArgs e)
         {
             Regex regex = new Regex("^[0-9]+$");
             e.Handled = !regex.IsMatch(e.Text);
         }
+
         private void SoloDecimal(object sender, TextCompositionEventArgs e)
         {
+            if (sender is not TextBox tb)
+                return;
+
+            if (e.Text == "." && tb.Text.Contains("."))
+            {
+                e.Handled = true;
+                return;
+            }
+
             Regex regex = new Regex("^[0-9.]+$");
             e.Handled = !regex.IsMatch(e.Text);
         }
+
         private void SoloNumerosYGuion(object sender, TextCompositionEventArgs e)
         {
             Regex regex = new Regex("^[0-9-]+$");

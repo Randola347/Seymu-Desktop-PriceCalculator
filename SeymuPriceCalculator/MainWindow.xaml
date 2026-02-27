@@ -136,28 +136,67 @@
 
                     <DataGrid.Columns>
 
+                        <!-- Numero -->
+                        <DataGridTextColumn Header="#"
+                            Binding="{Binding Numero}"
+                            Width="40"/>
+
+                        <!-- Tipo Madera -->
                         <DataGridTextColumn Header="Tipo Madera"
-                            Binding="{Binding TipoMadera}" />
+                            Binding="{Binding TipoMadera}"
+                            Width="110"/>
 
+                        <!-- Anchos Original -->
+                        <DataGridTextColumn Header="Anchos"
+                            Binding="{Binding Anchos}"
+                            Width="90"/>
+
+                        <!-- Largo -->
                         <DataGridTextColumn Header="Largo"
-                            Binding="{Binding Largo}" />
+                            Binding="{Binding Largo}"
+                            Width="70"/>
 
+                        <!-- Total Ancho -->
                         <DataGridTextColumn Header="Total Ancho"
-                            Binding="{Binding TotalAncho}" />
+                            Binding="{Binding TotalAncho}"
+                            Width="90"/>
 
+                        <!-- Grosor -->
                         <DataGridTextColumn Header="Grosor"
-                            Binding="{Binding Grosor}" />
+                            Binding="{Binding Grosor}"
+                            Width="70"/>
 
+                        <!-- Total Base -->
                         <DataGridTextColumn Header="Total Pulgadas"
-                    Binding="{Binding TotalBase}" />
+                            Binding="{Binding TotalBase}"
+                            Width="100"/>
 
+                        <!-- Precio -->
                         <DataGridTextColumn Header="Precio"
-                            Binding="{Binding Precio}" />
+                            Binding="{Binding Precio}"
+                            Width="80"/>
 
+                        <!-- Total -->
                         <DataGridTextColumn Header="Total"
-                            Binding="{Binding Total}" />
+                            Binding="{Binding Total}"
+                            Width="100"/>
+
+                        <!-- Acciones -->
+                        <DataGridTemplateColumn Header="Acciones" Width="110">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Button Content="Eliminar"
+                            Tag="{Binding}"
+                            Click="EliminarPieza_Click"
+                            Background="#C0392B"
+                            Foreground="White"
+                            Padding="5,2"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
 
                     </DataGrid.Columns>
+
                 </DataGrid>
             </Grid>
         </GroupBox>
