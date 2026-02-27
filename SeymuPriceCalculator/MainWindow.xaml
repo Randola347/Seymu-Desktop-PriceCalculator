@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Seymu - Calculadora de Madera"
         Height="650"
-        Width="1000"
+        Width="1100"
         WindowStartupLocation="CenterScreen">
 
     <Grid Margin="20">
@@ -21,7 +21,7 @@
                    Foreground="#2C3E50"
                    Margin="0,0,0,25"/>
 
-        <!-- Datos Cliente -->
+        <!-- ================= DATOS CLIENTE ================= -->
         <GroupBox Header="Datos del Cliente"
                   Grid.Row="1"
                   Margin="0,0,0,20"
@@ -36,9 +36,7 @@
                     <ColumnDefinition Width="250"/>
                 </Grid.ColumnDefinitions>
 
-                <TextBlock Text="Nombre:"
-                           VerticalAlignment="Center"/>
-
+                <TextBlock Text="Nombre:" VerticalAlignment="Center"/>
                 <TextBox x:Name="txtNombre"
                          Grid.Column="1"
                          Height="28"
@@ -47,7 +45,6 @@
                 <TextBlock Text="Teléfono:"
                            Grid.Column="3"
                            VerticalAlignment="Center"/>
-
                 <TextBox x:Name="txtTelefono"
                          Grid.Column="4"
                          Height="28"
@@ -55,18 +52,19 @@
             </Grid>
         </GroupBox>
 
-        <!-- Ingreso de piezas -->
+        <!-- ================= INGRESO PIEZAS ================= -->
         <GroupBox Header="Ingreso de Piezas"
                   Grid.Row="2"
                   Padding="15">
 
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="320"/>
+                    <ColumnDefinition Width="340"/>
                     <ColumnDefinition Width="20"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
+                <!-- PANEL IZQUIERDO -->
                 <StackPanel Grid.Column="0">
 
                     <TextBlock Text="Tipo de Madera"/>
@@ -116,81 +114,113 @@
                              Margin="0,5,0,20"
                              PreviewTextInput="SoloDecimal"/>
 
-                    <Button Content="Agregar Pieza"
-                            Height="40"
-                            Background="#27AE60"
-                            Foreground="White"
-                            FontWeight="Bold"
-                            Click="AgregarPieza_Click"/>
+                    <!-- BOTONES -->
+                    <StackPanel Orientation="Horizontal">
+
+                        <Button x:Name="btnAgregar"
+                                Content="Agregar"
+                                Width="110"
+                                Height="40"
+                                Background="#27AE60"
+                                Foreground="White"
+                                FontWeight="Bold"
+                                Click="AgregarPieza_Click"/>
+
+                        <Button x:Name="btnGuardar"
+                                Content="Guardar"
+                                Width="100"
+                                Height="40"
+                                Background="#2980B9"
+                                Foreground="White"
+                                FontWeight="Bold"
+                                Margin="10,0,0,0"
+                                Click="GuardarEdicion_Click"
+                                Visibility="Collapsed"/>
+
+                        <Button x:Name="btnCancelar"
+                                Content="Cancelar"
+                                Width="100"
+                                Height="40"
+                                Background="#7F8C8D"
+                                Foreground="White"
+                                FontWeight="Bold"
+                                Margin="10,0,0,0"
+                                Click="CancelarEdicion_Click"
+                                Visibility="Collapsed"/>
+
+                    </StackPanel>
+
                 </StackPanel>
 
-                <!-- Tabla -->
+                <!-- ================= TABLA ================= -->
                 <DataGrid x:Name="dgPiezas"
-          Grid.Column="2"
-          AutoGenerateColumns="False"
-          IsReadOnly="True"
-          RowHeight="30"
-          HeadersVisibility="Column"
-          GridLinesVisibility="None"
-          AlternatingRowBackground="#F2F2F2">
+                          Grid.Column="2"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          RowHeight="30"
+                          HeadersVisibility="Column"
+                          AlternatingRowBackground="#F2F2F2">
 
                     <DataGrid.Columns>
 
-                        <!-- Numero -->
                         <DataGridTextColumn Header="#"
-                            Binding="{Binding Numero}"
-                            Width="40"/>
+                                            Binding="{Binding Numero}"
+                                            Width="40"/>
 
-                        <!-- Tipo Madera -->
                         <DataGridTextColumn Header="Tipo Madera"
-                            Binding="{Binding TipoMadera}"
-                            Width="110"/>
+                                            Binding="{Binding TipoMadera}"
+                                            Width="110"/>
 
-                        <!-- Anchos Original -->
                         <DataGridTextColumn Header="Anchos"
-                            Binding="{Binding Anchos}"
-                            Width="90"/>
+                                            Binding="{Binding Anchos}"
+                                            Width="90"/>
 
-                        <!-- Largo -->
                         <DataGridTextColumn Header="Largo"
-                            Binding="{Binding Largo}"
-                            Width="70"/>
+                                            Binding="{Binding Largo}"
+                                            Width="70"/>
 
-                        <!-- Total Ancho -->
                         <DataGridTextColumn Header="Total Ancho"
-                            Binding="{Binding TotalAncho}"
-                            Width="90"/>
+                                            Binding="{Binding TotalAncho}"
+                                            Width="90"/>
 
-                        <!-- Grosor -->
                         <DataGridTextColumn Header="Grosor"
-                            Binding="{Binding Grosor}"
-                            Width="70"/>
+                                            Binding="{Binding Grosor}"
+                                            Width="70"/>
 
-                        <!-- Total Base -->
                         <DataGridTextColumn Header="Total Pulgadas"
-                            Binding="{Binding TotalBase}"
-                            Width="100"/>
+                                            Binding="{Binding TotalBase}"
+                                            Width="110"/>
 
-                        <!-- Precio -->
                         <DataGridTextColumn Header="Precio"
-                            Binding="{Binding Precio}"
-                            Width="80"/>
+                                            Binding="{Binding Precio}"
+                                            Width="80"/>
 
-                        <!-- Total -->
                         <DataGridTextColumn Header="Total"
-                            Binding="{Binding Total}"
-                            Width="100"/>
+                                            Binding="{Binding Total}"
+                                            Width="100"/>
 
-                        <!-- Acciones -->
-                        <DataGridTemplateColumn Header="Acciones" Width="110">
+                        <!-- ACCIONES -->
+                        <DataGridTemplateColumn Header="Acciones" Width="170">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <Button Content="Eliminar"
-                            Tag="{Binding}"
-                            Click="EliminarPieza_Click"
-                            Background="#C0392B"
-                            Foreground="White"
-                            Padding="5,2"/>
+                                    <StackPanel Orientation="Horizontal">
+
+                                        <Button Content="Editar"
+                                                Tag="{Binding}"
+                                                Click="EditarPieza_Click"
+                                                Background="#F39C12"
+                                                Foreground="White"
+                                                Padding="5,2"
+                                                Margin="0,0,5,0"/>
+
+                                        <Button Content="Eliminar"
+                                                Tag="{Binding}"
+                                                Click="EliminarPieza_Click"
+                                                Background="#C0392B"
+                                                Foreground="White"
+                                                Padding="5,2"/>
+
+                                    </StackPanel>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
@@ -198,10 +228,11 @@
                     </DataGrid.Columns>
 
                 </DataGrid>
+
             </Grid>
         </GroupBox>
 
-        <!-- Totales -->
+        <!-- ================= TOTALES ================= -->
         <StackPanel Grid.Row="3"
                     Orientation="Horizontal"
                     HorizontalAlignment="Right"
@@ -230,6 +261,7 @@
                        Foreground="#E74C3C"
                        FontWeight="Bold"
                        Margin="10,0"/>
+
         </StackPanel>
 
     </Grid>
