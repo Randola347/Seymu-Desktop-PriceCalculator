@@ -6,6 +6,11 @@ using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using SeymuPriceCalculator.Database;
+using Microsoft.Data.Sqlite;
+using System.Drawing;
+using System.Drawing.Printing;
+
 
 namespace SeymuPriceCalculator
 {
@@ -17,9 +22,222 @@ namespace SeymuPriceCalculator
         public MainWindow()
         {
             InitializeComponent();
+            DatabaseService.Initialize();
             dgPiezas.ItemsSource = piezas;
         }
+        private void GuardarCotizacion_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                using var connection = DatabaseService.GetConnection();
+                connection.Open();
 
+                // Obtener último ID para generar número tipo factura
+                var countCmd = connection.CreateCommand();
+                countCmd.CommandText = "SELECT IFNULL(MAX(Id),0) FROM Cotizaciones";
+                long ultimoId = (long)countCmd.ExecuteScalar();
+
+                long siguienteId = ultimoId + 1;
+
+                string numeroFactura = $"SEYMU-{siguienteId.ToString("D4")}";
+
+                // Insertar cotización
+                var command = connection.CreateCommand();
+
+                command.CommandText = @"
+INSERT INTO Cotizaciones (Fecha, Cliente, Subtotal, IVA, Total)
+VALUES ($fecha, $cliente, $subtotal, $iva, $total);
+SELECT last_insert_rowid();
+";
+
+                command.Parameters.AddWithValue("$fecha", DateTime.Now.ToString("yyyy-MM-dd HH:mm"));
+                command.Parameters.AddWithValue("$cliente", txtNombre.Text);
+
+                command.Parameters.AddWithValue("$subtotal",
+                    double.Parse(lblSubtotal.Text.Replace("₡", "").Trim()));
+
+                command.Parameters.AddWithValue("$iva",
+                    double.Parse(lblIVA.Text.Replace("₡", "").Trim()));
+
+                command.Parameters.AddWithValue("$total",
+                    double.Parse(lblTotal.Text.Replace("₡", "").Trim()));
+
+                long cotizacionId = (long)command.ExecuteScalar();
+
+                // Guardar piezas
+                foreach (var pieza in piezas)
+                {
+                    var piezaCmd = connection.CreateCommand();
+
+                    piezaCmd.CommandText = @"
+INSERT INTO Piezas
+(CotizacionId, TipoMadera, Anchos, Largo, TotalAncho, Grosor, Pulgadas, Precio, Total)
+VALUES
+($cotizacionId, $tipo, $anchos, $largo, $totalAncho, $grosor, $pulgadas, $precio, $total)
+";
+
+                    piezaCmd.Parameters.AddWithValue("$cotizacionId", cotizacionId);
+                    piezaCmd.Parameters.AddWithValue("$tipo", pieza.TipoMadera);
+                    piezaCmd.Parameters.AddWithValue("$anchos", pieza.Anchos);
+                    piezaCmd.Parameters.AddWithValue("$largo", pieza.Largo);
+                    piezaCmd.Parameters.AddWithValue("$totalAncho", pieza.TotalAncho);
+                    piezaCmd.Parameters.AddWithValue("$grosor", pieza.Grosor);
+                    piezaCmd.Parameters.AddWithValue("$pulgadas", pieza.TotalBase);
+                    piezaCmd.Parameters.AddWithValue("$precio", pieza.Precio);
+                    piezaCmd.Parameters.AddWithValue("$total", pieza.Total);
+
+                    piezaCmd.ExecuteNonQuery();
+                }
+
+                // Mensaje visual mejorado
+                ImprimirTicket(numeroFactura);
+                MessageBox.Show(
+        $@"✔ Cotización guardada correctamente
+
+Número de cotización:
+{numeroFactura}
+
+Cliente:
+{txtNombre.Text}
+
+Total:
+{lblTotal.Text}",
+                "SEYMU - Cotización registrada",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+
+                // Limpiar pantalla para nueva cotización
+                piezas.Clear();
+
+                txtNombre.Clear();
+                txtTelefono.Clear();
+
+                txtAnchos.Clear();
+                txtLargo.Clear();
+                txtPrecio.Clear();
+
+                cmbMadera.SelectedIndex = 0;
+                cmbGrosor.SelectedIndex = 0;
+
+                ActualizarTotales();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+        $@"Ocurrió un error al guardar la cotización.
+
+Detalle técnico:
+{ex.Message}",
+                "SEYMU - Error",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+            }
+        }
+
+        private string DetectarImpresoraTermica()
+        {
+            foreach (string printer in PrinterSettings.InstalledPrinters)
+            {
+                if (printer.ToLower().Contains("aon") ||
+                    printer.ToLower().Contains("thermal") ||
+                    printer.ToLower().Contains("receipt") ||
+                    printer.ToLower().Contains("receipt") ||
+                    printer.ToLower().Contains("pos"))
+                {
+                    return printer;
+                }
+            }
+
+            return PrinterSettings.InstalledPrinters.Count > 0
+                ? PrinterSettings.InstalledPrinters[0]
+                : "";
+        }
+
+        private void ImprimirTicket(string numeroFactura)
+        {
+            PrintDocument pd = new PrintDocument();
+
+            // Detectar impresora térmica automáticamente
+            string impresora = DetectarImpresoraTermica();
+
+            if (!string.IsNullOrEmpty(impresora))
+                pd.PrinterSettings.PrinterName = impresora;
+
+            pd.PrintPage += (sender, e) =>
+            {
+                Font fontTitulo = new Font(new FontFamily("Consolas"), 12, System.Drawing.FontStyle.Bold);
+                Font font = new Font(new FontFamily("Consolas"), 9);
+                Font fontTotal = new Font(new FontFamily("Consolas"), 10, System.Drawing.FontStyle.Bold);
+
+                float y = 10;
+
+                // ENCABEZADO
+                e.Graphics.DrawString("SEYMU", fontTitulo, Brushes.Black, 55, y);
+                y += 25;
+
+                e.Graphics.DrawString("Maderas y Aserradero", font, Brushes.Black, 20, y);
+                y += 20;
+
+                e.Graphics.DrawString("--------------------------------", font, Brushes.Black, 10, y);
+                y += 18;
+
+                e.Graphics.DrawString($"Cotización: {numeroFactura}", font, Brushes.Black, 10, y);
+                y += 18;
+
+                e.Graphics.DrawString($"Fecha: {DateTime.Now:dd/MM/yyyy HH:mm}", font, Brushes.Black, 10, y);
+                y += 18;
+
+                e.Graphics.DrawString($"Cliente: {txtNombre.Text}", font, Brushes.Black, 10, y);
+                y += 22;
+
+                e.Graphics.DrawString("--------------------------------", font, Brushes.Black, 10, y);
+                y += 18;
+
+                // CABECERA TABLA
+                e.Graphics.DrawString("Madera   Pulg   Total", font, Brushes.Black, 10, y);
+                y += 18;
+
+                e.Graphics.DrawString("--------------------------------", font, Brushes.Black, 10, y);
+                y += 20;
+
+                // PIEZAS
+                foreach (var pieza in piezas)
+                {
+                    string madera = pieza.TipoMadera.PadRight(8);
+                    string pulg = pieza.TotalBase.ToString("0").PadLeft(5);
+                    string total = pieza.Total.ToString("₡0").PadLeft(8);
+
+                    string linea = $"{madera}{pulg}{total}";
+
+                    e.Graphics.DrawString(linea, font, Brushes.Black, 10, y);
+
+                    y += 18;
+                }
+
+                y += 10;
+
+                e.Graphics.DrawString("--------------------------------", font, Brushes.Black, 10, y);
+                y += 18;
+
+                // TOTALES
+                e.Graphics.DrawString($"Subtotal: {lblSubtotal.Text}", font, Brushes.Black, 10, y);
+                y += 18;
+
+                e.Graphics.DrawString($"IVA 13%: {lblIVA.Text}", font, Brushes.Black, 10, y);
+                y += 22;
+
+                e.Graphics.DrawString($"TOTAL: {lblTotal.Text}", fontTotal, Brushes.Black, 10, y);
+                y += 25;
+
+                e.Graphics.DrawString("--------------------------------", font, Brushes.Black, 10, y);
+                y += 18;
+
+                e.Graphics.DrawString("Gracias por su compra", font, Brushes.Black, 20, y);
+                y += 30;
+            };
+
+            pd.Print();
+        }
         // ========================= AGREGAR =========================
         private void AgregarPieza_Click(object sender, RoutedEventArgs e)
         {

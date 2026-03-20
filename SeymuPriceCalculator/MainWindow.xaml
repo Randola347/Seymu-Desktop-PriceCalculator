@@ -344,25 +344,43 @@
         </GroupBox>
 
         <!-- ================= TOTALES ================= -->
-        <StackPanel Grid.Row="3"
-                    Orientation="Horizontal"
-                    HorizontalAlignment="Right"
-                    Margin="0,8,0,0">
+        <Grid Grid.Row="3" Margin="0,8,0,0">
 
-            <TextBlock Text="Subtotal: " FontWeight="Bold" Margin="10,0"/>
-            <TextBlock x:Name="lblSubtotal" Margin="10,0"/>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
 
-            <TextBlock Text="IVA (13%): " FontWeight="Bold" Margin="30,0"/>
-            <TextBlock x:Name="lblIVA" Margin="10,0"/>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
 
-            <TextBlock Text="Total: " FontWeight="Bold" Margin="30,0"/>
-            <TextBlock x:Name="lblTotal"
-                       FontSize="24"
-                       Foreground="Blue"
-                       FontWeight="Bold"
-                       Margin="10,0"/>
-        </StackPanel>
+                <TextBlock Text="Subtotal: " FontWeight="Bold" Margin="10,0"/>
+                <TextBlock x:Name="lblSubtotal" Margin="10,0"/>
 
+                <TextBlock Text="IVA (13%): " FontWeight="Bold" Margin="30,0"/>
+                <TextBlock x:Name="lblIVA" Margin="10,0"/>
+
+                <TextBlock Text="Total: " FontWeight="Bold" Margin="30,0"/>
+                <TextBlock x:Name="lblTotal"
+                   FontSize="24"
+                   Foreground="Blue"
+                   FontWeight="Bold"
+                   Margin="10,0"/>
+
+            </StackPanel>
+
+            <Button Grid.Column="4"
+        VerticalAlignment="Center"
+            Content="Guardar / Imprimir"
+            Width="200"
+            Height="45"
+            Margin="30,0"
+            Style="{StaticResource BotonVerde}"
+            Click="GuardarCotizacion_Click"/>
+
+        </Grid>
     </Grid>
 
 </Window>
