@@ -11,7 +11,6 @@ using Microsoft.Data.Sqlite;
 using System.Drawing;
 using System.Drawing.Printing;
 
-
 namespace SeymuPriceCalculator
 {
     public partial class MainWindow : Window
@@ -25,25 +24,81 @@ namespace SeymuPriceCalculator
             DatabaseService.Initialize();
             dgPiezas.ItemsSource = piezas;
         }
+
+        // ========================= MENSAJES =========================
+        private void MostrarInfo(string titulo, string mensaje)
+        {
+            MessageBox.Show(mensaje, titulo, MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private void MostrarAdvertencia(string titulo, string mensaje)
+        {
+            MessageBox.Show(mensaje, titulo, MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+
+        private void MostrarError(string titulo, string mensaje)
+        {
+            MessageBox.Show(mensaje, titulo, MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+
+        // ========================= VALIDACIÓN ANTES DE GUARDAR =========================
+        private bool ValidarAntesDeGuardar()
+        {
+            if (string.IsNullOrWhiteSpace(txtNombre.Text))
+            {
+                MostrarAdvertencia("Información incompleta", "Debe ingresar el nombre del cliente antes de guardar o imprimir.");
+                txtNombre.Focus();
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(txtTelefono.Text))
+            {
+                MostrarAdvertencia("Información incompleta", "Debe ingresar el teléfono del cliente antes de guardar o imprimir.");
+                txtTelefono.Focus();
+                return false;
+            }
+
+            if (piezas.Count == 0)
+            {
+                MostrarAdvertencia("Información incompleta", "Debe agregar al menos una pieza antes de guardar o imprimir.");
+                return false;
+            }
+
+            double subtotal = piezas.Sum(p => p.Total);
+            if (subtotal <= 0)
+            {
+                MostrarAdvertencia("Información incompleta", "El total de la cotización no es válido.");
+                return false;
+            }
+
+            return true;
+        }
+
+        // ========================= GUARDAR / IMPRIMIR =========================
         private void GuardarCotizacion_Click(object sender, RoutedEventArgs e)
         {
+            if (!ValidarAntesDeGuardar())
+                return;
+
             try
             {
                 using var connection = DatabaseService.GetConnection();
                 connection.Open();
 
+                double subtotal = piezas.Sum(p => p.Total);
+                double iva = subtotal * 0.13;
+                double total = subtotal + iva;
+
                 // Obtener último ID para generar número tipo factura
                 var countCmd = connection.CreateCommand();
                 countCmd.CommandText = "SELECT IFNULL(MAX(Id),0) FROM Cotizaciones";
-                long ultimoId = (long)countCmd.ExecuteScalar();
-
+                long ultimoId = Convert.ToInt64(countCmd.ExecuteScalar());
                 long siguienteId = ultimoId + 1;
 
-                string numeroFactura = $"SEYMU-{siguienteId.ToString("D4")}";
+                string numeroFactura = $"SEYMU-{siguienteId:D4}";
 
                 // Insertar cotización
                 var command = connection.CreateCommand();
-
                 command.CommandText = @"
 INSERT INTO Cotizaciones (Fecha, Cliente, Subtotal, IVA, Total)
 VALUES ($fecha, $cliente, $subtotal, $iva, $total);
@@ -51,24 +106,17 @@ SELECT last_insert_rowid();
 ";
 
                 command.Parameters.AddWithValue("$fecha", DateTime.Now.ToString("yyyy-MM-dd HH:mm"));
-                command.Parameters.AddWithValue("$cliente", txtNombre.Text);
+                command.Parameters.AddWithValue("$cliente", txtNombre.Text.Trim());
+                command.Parameters.AddWithValue("$subtotal", subtotal);
+                command.Parameters.AddWithValue("$iva", iva);
+                command.Parameters.AddWithValue("$total", total);
 
-                command.Parameters.AddWithValue("$subtotal",
-                    double.Parse(lblSubtotal.Text.Replace("₡", "").Trim()));
-
-                command.Parameters.AddWithValue("$iva",
-                    double.Parse(lblIVA.Text.Replace("₡", "").Trim()));
-
-                command.Parameters.AddWithValue("$total",
-                    double.Parse(lblTotal.Text.Replace("₡", "").Trim()));
-
-                long cotizacionId = (long)command.ExecuteScalar();
+                long cotizacionId = Convert.ToInt64(command.ExecuteScalar());
 
                 // Guardar piezas
                 foreach (var pieza in piezas)
                 {
                     var piezaCmd = connection.CreateCommand();
-
                     piezaCmd.CommandText = @"
 INSERT INTO Piezas
 (CotizacionId, TipoMadera, Anchos, Largo, TotalAncho, Grosor, Pulgadas, Precio, Total)
@@ -89,10 +137,27 @@ VALUES
                     piezaCmd.ExecuteNonQuery();
                 }
 
-                // Mensaje visual mejorado
-                ImprimirTicket(numeroFactura);
-                MessageBox.Show(
-        $@"✔ Cotización guardada correctamente
+                bool impreso = false;
+                string detalleImpresion = "";
+
+                try
+                {
+                    impreso = ImprimirTicket(numeroFactura);
+
+                    if (!impreso)
+                        detalleImpresion = "No se detectó una impresora térmica AON / PR-100B instalada.";
+                }
+                catch (Exception exPrint)
+                {
+                    impreso = false;
+                    detalleImpresion = exPrint.Message;
+                }
+
+                if (impreso)
+                {
+                    MostrarInfo(
+                        "SEYMU - Cotización registrada",
+                        $@"✔ Cotización guardada e impresa correctamente
 
 Número de cotización:
 {numeroFactura}
@@ -100,18 +165,30 @@ Número de cotización:
 Cliente:
 {txtNombre.Text}
 
+Teléfono:
+{txtTelefono.Text}
+
 Total:
-{lblTotal.Text}",
-                "SEYMU - Cotización registrada",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+{total:C}");
+                }
+                else
+                {
+                    MostrarAdvertencia(
+                        "SEYMU - Cotización guardada",
+                        $@"La cotización se guardó correctamente, pero no se pudo imprimir.
+
+Número de cotización:
+{numeroFactura}
+
+Motivo:
+{detalleImpresion}");
+                }
 
                 // Limpiar pantalla para nueva cotización
                 piezas.Clear();
 
                 txtNombre.Clear();
                 txtTelefono.Clear();
-
                 txtAnchos.Clear();
                 txtLargo.Clear();
                 txtPrecio.Clear();
@@ -123,45 +200,49 @@ Total:
             }
             catch (Exception ex)
             {
-                MessageBox.Show(
-        $@"Ocurrió un error al guardar la cotización.
+                MostrarError(
+                    "SEYMU - Error",
+                    $@"Ocurrió un error al guardar la cotización.
 
 Detalle técnico:
-{ex.Message}",
-                "SEYMU - Error",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+{ex.Message}");
             }
         }
 
+        // ========================= IMPRESORA =========================
         private string DetectarImpresoraTermica()
         {
             foreach (string printer in PrinterSettings.InstalledPrinters)
             {
-                if (printer.ToLower().Contains("aon") ||
-                    printer.ToLower().Contains("thermal") ||
-                    printer.ToLower().Contains("receipt") ||
-                    printer.ToLower().Contains("receipt") ||
-                    printer.ToLower().Contains("pos"))
+                string nombre = printer.ToLower();
+
+                if (nombre.Contains("aon") ||
+                    nombre.Contains("pr-100b") ||
+                    nombre.Contains("thermal") ||
+                    nombre.Contains("receipt") ||
+                    nombre.Contains("pos") ||
+                    nombre.Contains("58"))
                 {
                     return printer;
                 }
             }
 
-            return PrinterSettings.InstalledPrinters.Count > 0
-                ? PrinterSettings.InstalledPrinters[0]
-                : "";
+            // NO devolver la primera impresora del sistema
+            return string.Empty;
         }
 
-        private void ImprimirTicket(string numeroFactura)
+        private bool ImprimirTicket(string numeroFactura)
         {
-            PrintDocument pd = new PrintDocument();
-
-            // Detectar impresora térmica automáticamente
             string impresora = DetectarImpresoraTermica();
 
-            if (!string.IsNullOrEmpty(impresora))
-                pd.PrinterSettings.PrinterName = impresora;
+            if (string.IsNullOrWhiteSpace(impresora))
+                return false;
+
+            PrintDocument pd = new PrintDocument();
+            pd.PrinterSettings.PrinterName = impresora;
+
+            if (!pd.PrinterSettings.IsValid)
+                return false;
 
             pd.PrintPage += (sender, e) =>
             {
@@ -171,7 +252,7 @@ Detalle técnico:
 
                 float y = 10;
 
-                // ENCABEZADO
+                // Encabezado
                 e.Graphics.DrawString("SEYMU", fontTitulo, Brushes.Black, 55, y);
                 y += 25;
 
@@ -188,56 +269,59 @@ Detalle técnico:
                 y += 18;
 
                 e.Graphics.DrawString($"Cliente: {txtNombre.Text}", font, Brushes.Black, 10, y);
+                y += 18;
+
+                e.Graphics.DrawString($"Tel: {txtTelefono.Text}", font, Brushes.Black, 10, y);
                 y += 22;
 
                 e.Graphics.DrawString("--------------------------------", font, Brushes.Black, 10, y);
                 y += 18;
 
-                // CABECERA TABLA
+                // Cabecera tabla
                 e.Graphics.DrawString("Madera   Pulg   Total", font, Brushes.Black, 10, y);
                 y += 18;
 
                 e.Graphics.DrawString("--------------------------------", font, Brushes.Black, 10, y);
                 y += 20;
 
-                // PIEZAS
                 foreach (var pieza in piezas)
                 {
                     string madera = pieza.TipoMadera.PadRight(8);
                     string pulg = pieza.TotalBase.ToString("0").PadLeft(5);
-                    string total = pieza.Total.ToString("₡0").PadLeft(8);
+                    string totalLinea = pieza.Total.ToString("₡0").PadLeft(8);
 
-                    string linea = $"{madera}{pulg}{total}";
-
+                    string linea = $"{madera}{pulg}{totalLinea}";
                     e.Graphics.DrawString(linea, font, Brushes.Black, 10, y);
-
                     y += 18;
                 }
 
-                y += 10;
+                double subtotal = piezas.Sum(p => p.Total);
+                double iva = subtotal * 0.13;
+                double totalFinal = subtotal + iva;
 
+                y += 10;
                 e.Graphics.DrawString("--------------------------------", font, Brushes.Black, 10, y);
                 y += 18;
 
-                // TOTALES
-                e.Graphics.DrawString($"Subtotal: {lblSubtotal.Text}", font, Brushes.Black, 10, y);
+                e.Graphics.DrawString($"Subtotal: {subtotal:C}", font, Brushes.Black, 10, y);
                 y += 18;
 
-                e.Graphics.DrawString($"IVA 13%: {lblIVA.Text}", font, Brushes.Black, 10, y);
+                e.Graphics.DrawString($"IVA 13%: {iva:C}", font, Brushes.Black, 10, y);
                 y += 22;
 
-                e.Graphics.DrawString($"TOTAL: {lblTotal.Text}", fontTotal, Brushes.Black, 10, y);
+                e.Graphics.DrawString($"TOTAL: {totalFinal:C}", fontTotal, Brushes.Black, 10, y);
                 y += 25;
 
                 e.Graphics.DrawString("--------------------------------", font, Brushes.Black, 10, y);
                 y += 18;
 
                 e.Graphics.DrawString("Gracias por su compra", font, Brushes.Black, 20, y);
-                y += 30;
             };
 
             pd.Print();
+            return true;
         }
+
         // ========================= AGREGAR =========================
         private void AgregarPieza_Click(object sender, RoutedEventArgs e)
         {
@@ -304,7 +388,6 @@ Detalle técnico:
             piezaEnEdicion.Precio = precio;
 
             dgPiezas.Items.Refresh();
-
             ActualizarTotales();
             LimpiarFormulario();
         }
@@ -360,19 +443,22 @@ Detalle técnico:
 
             if (!double.TryParse(txtLargo.Text, NumberStyles.Any, CultureInfo.InvariantCulture, out largo) || largo <= 0)
             {
-                MessageBox.Show("Ingrese un largo válido.");
+                MostrarAdvertencia("Dato inválido", "Ingrese un largo válido.");
+                txtLargo.Focus();
                 return false;
             }
 
             if (!double.TryParse(txtPrecio.Text, NumberStyles.Any, CultureInfo.InvariantCulture, out precio) || precio <= 0)
             {
-                MessageBox.Show("Ingrese un precio válido.");
+                MostrarAdvertencia("Dato inválido", "Ingrese un precio válido.");
+                txtPrecio.Focus();
                 return false;
             }
 
             if (cmbGrosor.SelectedItem is not ComboBoxItem grosorItem)
             {
-                MessageBox.Show("Seleccione un grosor.");
+                MostrarAdvertencia("Dato inválido", "Seleccione un grosor.");
+                cmbGrosor.Focus();
                 return false;
             }
 
@@ -380,7 +466,8 @@ Detalle técnico:
 
             if (string.IsNullOrWhiteSpace(txtAnchos.Text))
             {
-                MessageBox.Show("Ingrese al menos un ancho.");
+                MostrarAdvertencia("Dato inválido", "Ingrese al menos un ancho.");
+                txtAnchos.Focus();
                 return false;
             }
 
@@ -390,7 +477,8 @@ Detalle técnico:
             {
                 if (!double.TryParse(parte.Trim(), NumberStyles.Any, CultureInfo.InvariantCulture, out double valor) || valor <= 0)
                 {
-                    MessageBox.Show("Formato de anchos inválido.");
+                    MostrarAdvertencia("Dato inválido", "Formato de anchos inválido.");
+                    txtAnchos.Focus();
                     return false;
                 }
 

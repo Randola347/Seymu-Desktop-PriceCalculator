@@ -6,45 +6,46 @@
         Width="1100"
         WindowStartupLocation="CenterScreen"
         WindowState="Maximized"
-    FontSize="18"
+        FontSize="18"
         TextOptions.TextFormattingMode="Display"
         TextOptions.TextRenderingMode="ClearType">
 
     <Window.Resources>
-    <SolidColorBrush x:Key="VerdePrimario" Color="#2D6A27"/>
+        <SolidColorBrush x:Key="VerdePrimario" Color="#2D6A27"/>
         <SolidColorBrush x:Key="VerdeHover" Color="#24541F"/>
         <SolidColorBrush x:Key="BeigeFondo" Color="#F5F0E8"/>
         <SolidColorBrush x:Key="GrisBorde" Color="#D0D0D0"/>
 
-        <!-- 🏷 Estilo etiquetas -->
+        <!-- Etiquetas -->
         <Style x:Key="Etiqueta" TargetType="TextBlock">
             <Setter Property="Foreground" Value="{StaticResource VerdePrimario}"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="FontSize" Value="19"/>
-            <Setter Property="Margin" Value="0,4,0,10"/>
+            <Setter Property="Margin" Value="0,2,0,6"/>
         </Style>
 
-        <!-- 📦 Estilo TextBox global -->
+        <!-- TextBox -->
         <Style TargetType="TextBox">
-            <Setter Property="Height" Value="34"/>
-            <Setter Property="FontSize" Value="20"/>
-            <Setter Property="Margin" Value="0,6,0,14"/>
-            <Setter Property="BorderBrush" Value="{StaticResource GrisBorde}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="10,6"/>
-        </Style>
-
-        <!-- 📦 Estilo ComboBox global -->
-        <Style TargetType="ComboBox">
-            <Setter Property="Height" Value="34"/>
+            <Setter Property="Height" Value="42"/>
             <Setter Property="FontSize" Value="20"/>
             <Setter Property="Margin" Value="0,4,0,10"/>
             <Setter Property="BorderBrush" Value="{StaticResource GrisBorde}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="10,6"/>
+            <Setter Property="Padding" Value="10,4"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
         </Style>
 
-        <!-- 🟢 Botón verde (con hover) -->
+        <!-- ComboBox -->
+        <Style TargetType="ComboBox">
+            <Setter Property="Height" Value="42"/>
+            <Setter Property="FontSize" Value="20"/>
+            <Setter Property="Margin" Value="0,4,0,10"/>
+            <Setter Property="BorderBrush" Value="{StaticResource GrisBorde}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="8,2"/>
+        </Style>
+
+        <!-- Botón verde -->
         <Style x:Key="BotonVerde" TargetType="Button">
             <Setter Property="Background" Value="{StaticResource VerdePrimario}"/>
             <Setter Property="Foreground" Value="White"/>
@@ -70,18 +71,17 @@
             </Setter>
         </Style>
 
-        <!-- 🔵 Botón Azul -->
+        <!-- Botón azul -->
         <Style x:Key="BotonAzul" TargetType="Button" BasedOn="{StaticResource BotonVerde}">
             <Setter Property="Background" Value="#2980B9"/>
         </Style>
 
-        <!-- ⚪ Botón Gris -->
+        <!-- Botón gris -->
         <Style x:Key="BotonGris" TargetType="Button" BasedOn="{StaticResource BotonVerde}">
             <Setter Property="Background" Value="#7F8C8D"/>
         </Style>
     </Window.Resources>
 
-    <!-- ================= LAYOUT ================= -->
     <Grid Margin="5" Background="{StaticResource BeigeFondo}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -90,21 +90,19 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Título -->
+        <!-- Encabezado -->
         <Border Background="{StaticResource VerdePrimario}"
-        CornerRadius="10"
-        Padding="10"
-        Margin="0,0,0,15">
-
+                CornerRadius="10"
+                Padding="10"
+                Margin="0,0,0,15">
             <TextBlock Text="SEYMU"
-               FontSize="28"
-               FontWeight="Bold"
-               Foreground="White"
-               VerticalAlignment="Center"/>
-
+                       FontSize="28"
+                       FontWeight="Bold"
+                       Foreground="White"
+                       VerticalAlignment="Center"/>
         </Border>
 
-        <!-- ================= DATOS CLIENTE ================= -->
+        <!-- Datos cliente -->
         <GroupBox Header="Datos del Cliente"
                   Grid.Row="1"
                   Margin="0,0,0,10"
@@ -119,7 +117,10 @@
                     <ColumnDefinition Width="250"/>
                 </Grid.ColumnDefinitions>
 
-                <TextBlock Text="Nombre:" VerticalAlignment="Center" Style="{StaticResource Etiqueta}"/>
+                <TextBlock Text="Nombre:"
+                           VerticalAlignment="Center"
+                           Style="{StaticResource Etiqueta}"/>
+
                 <TextBox x:Name="txtNombre"
                          Grid.Column="1"
                          PreviewTextInput="SoloLetras"/>
@@ -128,34 +129,35 @@
                            Grid.Column="3"
                            VerticalAlignment="Center"
                            Style="{StaticResource Etiqueta}"/>
+
                 <TextBox x:Name="txtTelefono"
                          Grid.Column="4"
                          PreviewTextInput="SoloNumeros"/>
             </Grid>
         </GroupBox>
 
-
-        <!-- ================= INGRESO PIEZAS ================= -->
+        <!-- Ingreso piezas -->
         <GroupBox Header="Ingreso de Piezas"
-          Grid.Row="2"
-          Padding="0">
-        <Grid>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
+                  Grid.Row="2"
+                  Padding="0">
 
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="360"/>
-                <ColumnDefinition Width="15"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-
-            <!-- PANEL IZQUIERDO -->
-            <Grid Grid.Column="0"
-                  Grid.Row="0"
-                  VerticalAlignment="Stretch">
-                
+            <Grid>
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="360"/>
+                    <ColumnDefinition Width="15"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Panel izquierdo -->
+                <Grid Grid.Column="0"
+                      Grid.Row="0"
+                      VerticalAlignment="Stretch">
+
+                    <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
@@ -183,13 +185,15 @@
                     <!-- Largo -->
                     <StackPanel Grid.Row="1">
                         <TextBlock Text="Largo" Style="{StaticResource Etiqueta}"/>
-                        <TextBox x:Name="txtLargo" PreviewTextInput="SoloDecimal"/>
+                        <TextBox x:Name="txtLargo"
+                                 PreviewTextInput="SoloDecimal"/>
                     </StackPanel>
 
                     <!-- Anchos -->
                     <StackPanel Grid.Row="2">
                         <TextBlock Text="Anchos (Ej: 10-7-5-9)" Style="{StaticResource Etiqueta}"/>
-                        <TextBox x:Name="txtAnchos" PreviewTextInput="SoloNumerosYGuion"/>
+                        <TextBox x:Name="txtAnchos"
+                                 PreviewTextInput="SoloNumerosYGuion"/>
                     </StackPanel>
 
                     <!-- Grosor -->
@@ -209,83 +213,83 @@
                     <!-- Precio -->
                     <StackPanel Grid.Row="4">
                         <TextBlock Text="Precio por Pulgada" Style="{StaticResource Etiqueta}"/>
-                        <TextBox x:Name="txtPrecio" PreviewTextInput="SoloDecimal"/>
+                        <TextBox x:Name="txtPrecio"
+                                 PreviewTextInput="SoloDecimal"/>
                     </StackPanel>
 
                     <!-- Botones -->
-                    <StackPanel Grid.Row="5" Orientation="Horizontal" Margin="0,8,0,0">
+                    <StackPanel Grid.Row="5"
+                                Orientation="Horizontal"
+                                Margin="0,8,0,0">
 
                         <Button x:Name="btnAgregar"
-                Content="Agregar"
-                Width="120"
-                Style="{StaticResource BotonVerde}"
-                Click="AgregarPieza_Click"/>
+                                Content="Agregar"
+                                Width="120"
+                                Style="{StaticResource BotonVerde}"
+                                Click="AgregarPieza_Click"/>
 
                         <Button x:Name="btnGuardar"
-                Content="Guardar"
-                Width="120"
-                Margin="10,0,0,0"
-                Style="{StaticResource BotonAzul}"
-                Click="GuardarEdicion_Click"
-                Visibility="Collapsed"/>
+                                Content="Guardar"
+                                Width="120"
+                                Margin="10,0,0,0"
+                                Style="{StaticResource BotonAzul}"
+                                Click="GuardarEdicion_Click"
+                                Visibility="Collapsed"/>
 
                         <Button x:Name="btnCancelar"
-                Content="Cancelar"
-                Width="120"
-                Margin="10,0,0,0"
-                Style="{StaticResource BotonGris}"
-                Click="CancelarEdicion_Click"
-                Visibility="Collapsed"/>
-
+                                Content="Cancelar"
+                                Width="120"
+                                Margin="10,0,0,0"
+                                Style="{StaticResource BotonGris}"
+                                Click="CancelarEdicion_Click"
+                                Visibility="Collapsed"/>
                     </StackPanel>
-
                 </Grid>
-                <!-- ================= TABLA ================= -->
-             <DataGrid x:Name="dgPiezas"
-             Grid.Column="2"
-          AutoGenerateColumns="False"
-          IsReadOnly="True"
-          FontSize="18"
-          RowHeight="40"
-          ColumnHeaderHeight="42"
-          HeadersVisibility="Column"
-          AlternatingRowBackground="#F2F2F2"
-          HorizontalAlignment="Stretch">
+
+                <!-- Tabla -->
+                <DataGrid x:Name="dgPiezas"
+                          Grid.Column="2"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          FontSize="18"
+                          RowHeight="40"
+                          ColumnHeaderHeight="42"
+                          HeadersVisibility="Column"
+                          AlternatingRowBackground="#F2F2F2"
+                          HorizontalAlignment="Stretch">
 
                     <DataGrid.Columns>
-
                         <DataGridTextColumn Header="#"
-                    Binding="{Binding Numero}"
-                    Width="30"/>
+                                            Binding="{Binding Numero}"
+                                            Width="30"/>
 
                         <DataGridTextColumn Header="Madera"
-                    Binding="{Binding TipoMadera}"
-                    Width="105"/>
+                                            Binding="{Binding TipoMadera}"
+                                            Width="105"/>
 
                         <DataGridTextColumn Header="Anchos"
-                    Binding="{Binding Anchos}"
-                    Width="*"/>
+                                            Binding="{Binding Anchos}"
+                                            Width="*"/>
 
                         <DataGridTextColumn Header="Largo"
-                    Binding="{Binding Largo}"
-                    Width="60"/>
+                                            Binding="{Binding Largo}"
+                                            Width="60"/>
 
                         <DataGridTextColumn Header="Total Ancho"
-                    Binding="{Binding TotalAncho}"
-                    Width="110"/>
+                                            Binding="{Binding TotalAncho}"
+                                            Width="110"/>
 
                         <DataGridTextColumn Header="Grosor"
-                    Binding="{Binding Grosor}"
-                    Width="65"/>
+                                            Binding="{Binding Grosor}"
+                                            Width="65"/>
 
                         <DataGridTextColumn Header="Pulgadas"
-                    Binding="{Binding TotalBase}"
-                    Width="110"/>
+                                            Binding="{Binding TotalBase}"
+                                            Width="110"/>
 
                         <DataGridTextColumn Header="Precio"
-                    Binding="{Binding Precio, StringFormat='₡ {0:N2}'}"
-                    Width="110">
-
+                                            Binding="{Binding Precio, StringFormat='₡ {0:N2}'}"
+                                            Width="110">
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock">
                                     <Setter Property="Foreground" Value="#2980B9"/>
@@ -293,13 +297,11 @@
                                     <Setter Property="HorizontalAlignment" Value="Right"/>
                                 </Style>
                             </DataGridTextColumn.ElementStyle>
-
                         </DataGridTextColumn>
 
                         <DataGridTextColumn Header="Total"
-                    Binding="{Binding Precio, StringFormat='₡ {0:N2}'}"
-                    Width="110">
-
+                                            Binding="{Binding Total, StringFormat='₡ {0:N2}'}"
+                                            Width="110">
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock">
                                     <Setter Property="Foreground" Value="Blue"/>
@@ -307,15 +309,13 @@
                                     <Setter Property="HorizontalAlignment" Value="Right"/>
                                 </Style>
                             </DataGridTextColumn.ElementStyle>
-
                         </DataGridTextColumn>
 
-                        <!-- ACCIONES -->
+                        <!-- Acciones -->
                         <DataGridTemplateColumn Header="Acciones" Width="180">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal">
-
                                         <Button Content="Editar"
                                                 Tag="{Binding}"
                                                 Click="EditarPieza_Click"
@@ -330,22 +330,17 @@
                                                 Background="#C0392B"
                                                 Foreground="White"
                                                 Padding="5,2"/>
-
                                     </StackPanel>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
-
                     </DataGrid.Columns>
-
                 </DataGrid>
-
             </Grid>
         </GroupBox>
 
-        <!-- ================= TOTALES ================= -->
+        <!-- Totales -->
         <Grid Grid.Row="3" Margin="0,8,0,0">
-
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
@@ -354,33 +349,40 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
-            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+            <StackPanel Grid.Column="1"
+                        Orientation="Horizontal"
+                        VerticalAlignment="Center">
 
-                <TextBlock Text="Subtotal: " FontWeight="Bold" Margin="10,0"/>
-                <TextBlock x:Name="lblSubtotal" Margin="10,0"/>
+                <TextBlock Text="Subtotal: "
+                           FontWeight="Bold"
+                           Margin="10,0"/>
+                <TextBlock x:Name="lblSubtotal"
+                           Margin="10,0"/>
 
-                <TextBlock Text="IVA (13%): " FontWeight="Bold" Margin="30,0"/>
-                <TextBlock x:Name="lblIVA" Margin="10,0"/>
+                <TextBlock Text="IVA (13%): "
+                           FontWeight="Bold"
+                           Margin="30,0"/>
+                <TextBlock x:Name="lblIVA"
+                           Margin="10,0"/>
 
-                <TextBlock Text="Total: " FontWeight="Bold" Margin="30,0"/>
+                <TextBlock Text="Total: "
+                           FontWeight="Bold"
+                           Margin="30,0"/>
                 <TextBlock x:Name="lblTotal"
-                   FontSize="24"
-                   Foreground="Blue"
-                   FontWeight="Bold"
-                   Margin="10,0"/>
-
+                           FontSize="24"
+                           Foreground="Blue"
+                           FontWeight="Bold"
+                           Margin="10,0"/>
             </StackPanel>
 
             <Button Grid.Column="4"
-        VerticalAlignment="Center"
-            Content="Guardar / Imprimir"
-            Width="200"
-            Height="45"
-            Margin="30,0"
-            Style="{StaticResource BotonVerde}"
-            Click="GuardarCotizacion_Click"/>
-
+                    VerticalAlignment="Center"
+                    Content="Guardar / Imprimir"
+                    Width="200"
+                    Height="45"
+                    Margin="30,0"
+                    Style="{StaticResource BotonVerde}"
+                    Click="GuardarCotizacion_Click"/>
         </Grid>
     </Grid>
-
 </Window>
