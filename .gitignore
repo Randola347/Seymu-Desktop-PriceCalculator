@@ -2,7 +2,7 @@
 .vs/
 bin/
 obj/
-
+database.db
 # User files
 *.user
 *.suo

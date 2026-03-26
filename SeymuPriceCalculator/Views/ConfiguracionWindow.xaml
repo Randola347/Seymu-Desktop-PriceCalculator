@@ -1,0 +1,193 @@
+<Window x:Class="SeymuPriceCalculator.Views.ConfiguracionWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Configuración — Seymu"
+        Height="680" Width="1050"
+        MinHeight="600" MinWidth="900"
+        WindowStartupLocation="CenterOwner"
+        FontFamily="Segoe UI Variable Display, Segoe UI, sans-serif"
+        FontSize="14"
+        Background="#ECEEF0"
+        ResizeMode="CanResize">
+
+    <Window.Resources>
+        <SolidColorBrush x:Key="Verde"      Color="#2D6A27"/>
+        <SolidColorBrush x:Key="VerdeOsc"   Color="#1E4A1B"/>
+        <SolidColorBrush x:Key="VerdeLight" Color="#C8E6C4"/>
+        <SolidColorBrush x:Key="VerdeMuy"   Color="#EAF4E8"/>
+
+        <!-- Botón del menú lateral — inactivo -->
+        <Style x:Key="BtnMenu" TargetType="Button">
+            <Setter Property="Height"          Value="52"/>
+            <Setter Property="FontSize"        Value="15"/>
+            <Setter Property="FontWeight"      Value="SemiBold"/>
+            <Setter Property="Foreground"      Value="#CCFFCC"/>
+            <Setter Property="Background"      Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor"          Value="Hand"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="fondo"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="8"
+                                Padding="16,0">
+                            <ContentPresenter VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="fondo" Property="Background"
+                                        Value="#FFFFFF22"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="fondo" Property="Background"
+                                        Value="#FFFFFF33"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Botón del menú lateral — activo (blanco) -->
+        <Style x:Key="BtnMenuActivo" TargetType="Button" BasedOn="{StaticResource BtnMenu}">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Background" Value="#FFFFFF28"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+        </Style>
+
+        <!-- Botón cerrar -->
+        <Style x:Key="BtnCerrar" TargetType="Button">
+            <Setter Property="Height"          Value="44"/>
+            <Setter Property="FontSize"        Value="14"/>
+            <Setter Property="FontWeight"      Value="Bold"/>
+            <Setter Property="Foreground"      Value="{StaticResource Verde}"/>
+            <Setter Property="Background"      Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor"          Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="8" Padding="16,0">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Opacity" Value="0.88"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="230"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- ── MENÚ LATERAL ──────────────────────────────────── -->
+        <Border Grid.Column="0"
+                Background="{StaticResource Verde}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Header del menú -->
+                <Border Grid.Row="0"
+                        Background="#1E4A1B"
+                        Padding="20,20,20,16">
+                    <StackPanel>
+                        <TextBlock Text="⚙"
+                                   FontSize="22"
+                                   Foreground="White"
+                                   Margin="0,0,0,6"/>
+                        <TextBlock Text="Configuración"
+                                   FontSize="18" FontWeight="Bold"
+                                   Foreground="White"/>
+                        <TextBlock Text="Seymu — Sistema"
+                                   FontSize="11"
+                                   Foreground="#AADDAA"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Botones de navegación -->
+                <StackPanel Grid.Row="1" Margin="12,16,12,0">
+
+                    <TextBlock Text="MÓDULOS"
+                               FontSize="10" FontWeight="Bold"
+                               Foreground="#88BB88"
+                               Margin="6,0,0,8"/>
+
+                    <Button x:Name="btnHistorial"
+                            Content="📋  Historial"
+                            Style="{StaticResource BtnMenu}"
+                            Margin="0,0,0,4"
+                            Click="MostrarHistorial_Click"/>
+
+                    <Button x:Name="btnAdministrar"
+                            Content="🗂  Administrar"
+                            Style="{StaticResource BtnMenu}"
+                            Margin="0,0,0,4"
+                            Click="MostrarAdministrar_Click"/>
+
+                    <Button x:Name="btnEmpresa"
+                            Content="🏢  Empresa"
+                            Style="{StaticResource BtnMenu}"
+                            Margin="0,0,0,4"
+                            Click="MostrarEmpresa_Click"/>
+
+                    <Border Height="1"
+                            Background="#FFFFFF22"
+                            Margin="6,16,6,16"/>
+
+                </StackPanel>
+
+                <!-- Botón cerrar al fondo -->
+                <Border Grid.Row="2" Padding="14,0,14,20">
+                    <Button Content="✖   Cerrar"
+                            Style="{StaticResource BtnCerrar}"
+                            Click="Cerrar_Click"/>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- ── ÁREA DE CONTENIDO ─────────────────────────────── -->
+        <Grid Grid.Column="1" Background="#ECEEF0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Mini header del área derecha -->
+            <Border Grid.Row="0"
+                    Background="White"
+                    BorderBrush="#DEDEDE"
+                    BorderThickness="0,0,0,1"
+                    Padding="24,14">
+                <TextBlock x:Name="lblSeccionActual"
+                           Text="Selecciona una sección del menú"
+                           FontSize="16" FontWeight="Bold"
+                           Foreground="#111111"/>
+            </Border>
+
+            <!-- Contenido dinámico -->
+            <Border Grid.Row="1"
+                    Margin="16"
+                    Background="White"
+                    CornerRadius="10"
+                    BorderBrush="#DEDEDE"
+                    BorderThickness="1">
+                <ContentControl x:Name="ContenidoPrincipal"/>
+            </Border>
+        </Grid>
+    </Grid>
+</Window>

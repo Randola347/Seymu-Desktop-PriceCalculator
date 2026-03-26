@@ -1,0 +1,40 @@
+<UserControl x:Class="SeymuPriceCalculator.Views.AdministrarView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="Administrar"
+                   FontSize="26"
+                   FontWeight="Bold"
+                   Foreground="#2D6A27"
+                   Margin="0,0,0,15"/>
+
+        <TabControl Grid.Row="1">
+            <TabItem Header="Maderas">
+                <Grid Margin="10">
+                    <TextBlock Text="Aquí irá el CRUD de tipos de madera."
+                               FontSize="18"/>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="Grosores">
+                <Grid Margin="10">
+                    <TextBlock Text="Aquí irá el CRUD de grosores."
+                               FontSize="18"/>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="Clientes">
+                <Grid Margin="10">
+                    <TextBlock Text="Aquí irá el CRUD de clientes."
+                               FontSize="18"/>
+                </Grid>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</UserControl>
