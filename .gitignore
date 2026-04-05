@@ -6,7 +6,10 @@ database.db
 # User files
 *.user
 *.suo
-
+appsettings.json
+*.db
+*.db-shm
+*.db-wal
 # Build folders
 Debug/
 Release/

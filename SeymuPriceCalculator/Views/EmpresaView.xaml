@@ -28,7 +28,7 @@
             <Setter Property="BorderThickness"          Value="0,0,0,2"/>
             <Setter Property="Padding"                  Value="12,0"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
-            <Setter Property="Margin"                   Value="0,0,0,18"/>
+            <Setter Property="Margin"                   Value="0,0,0,16"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="TextBox">
@@ -56,75 +56,113 @@
         </Style>
     </UserControl.Resources>
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Margin="32,28,32,28" MaxWidth="580" HorizontalAlignment="Left">
+    <!-- Layout de dos columnas: formulario | preview logo -->
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="480"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
 
-            <!-- Título -->
-            <StackPanel Orientation="Horizontal" Margin="0,0,0,28">
-                <Border Width="5" Height="26" CornerRadius="3"
-                        Background="{StaticResource Verde}"
-                        Margin="0,0,12,0" VerticalAlignment="Center"/>
-                <TextBlock Text="Datos de la Empresa"
-                           FontSize="20" FontWeight="Bold"
-                           Foreground="{StaticResource Texto}"
-                           VerticalAlignment="Center"/>
-            </StackPanel>
+        <!-- ── COLUMNA IZQUIERDA: Formulario ────────────────── -->
+        <ScrollViewer Grid.Column="0"
+                      VerticalScrollBarVisibility="Auto"
+                      BorderBrush="{StaticResource Borde}"
+                      BorderThickness="0,0,1,0">
+            <StackPanel Margin="28,24,28,28">
 
-            <!-- Nombre -->
-            <TextBlock Text="NOMBRE DE LA EMPRESA" Style="{StaticResource Lbl}"/>
-            <TextBox x:Name="txtNombre"/>
+                <!-- Título -->
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,24">
+                    <Border Width="5" Height="26" CornerRadius="3"
+                            Background="{StaticResource Verde}"
+                            Margin="0,0,12,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="Datos de la Empresa"
+                               FontSize="20" FontWeight="Bold"
+                               Foreground="{StaticResource Texto}"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
 
-            <!-- Ubicación -->
-            <TextBlock Text="UBICACIÓN / DIRECCIÓN" Style="{StaticResource Lbl}"/>
-            <TextBox x:Name="txtUbicacion"/>
+                <!-- Nombre -->
+                <TextBlock Text="NOMBRE DE LA EMPRESA" Style="{StaticResource Lbl}"/>
+                <TextBox x:Name="txtNombre"/>
 
-            <!-- Teléfono -->
-            <TextBlock Text="TELÉFONO" Style="{StaticResource Lbl}"/>
-            <TextBox x:Name="txtTelefono"/>
+                <!-- Ubicación -->
+                <TextBlock Text="UBICACIÓN / DIRECCIÓN" Style="{StaticResource Lbl}"/>
+                <TextBox x:Name="txtUbicacion"/>
 
-            <!-- Correo -->
-            <TextBlock Text="CORREO ELECTRÓNICO" Style="{StaticResource Lbl}"/>
-            <TextBox x:Name="txtCorreo"/>
+                <!-- Teléfono -->
+                <TextBlock Text="TELÉFONO" Style="{StaticResource Lbl}"/>
+                <TextBox x:Name="txtTelefono"/>
 
-            <!-- Logo -->
-            <TextBlock Text="LOGO DE LA EMPRESA" Style="{StaticResource Lbl}"/>
+                <!-- Correo -->
+                <TextBlock Text="CORREO ELECTRÓNICO" Style="{StaticResource Lbl}"/>
+                <TextBox x:Name="txtCorreo"/>
 
-            <Grid Margin="0,0,0,12">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="12"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
+                <!-- Logo -->
+                <TextBlock Text="LOGO DE LA EMPRESA" Style="{StaticResource Lbl}"/>
+                <Grid Margin="0,0,0,24">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="12"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
 
-                <Border Grid.Column="0"
-                        Background="{StaticResource FondoBox}"
-                        BorderBrush="{StaticResource Borde}"
-                        BorderThickness="0,0,0,2"
-                        CornerRadius="6,6,0,0"
-                        Height="44">
-                    <TextBlock x:Name="txtLogoRuta"
-                               Text="Sin logo seleccionado"
-                               Foreground="#999999"
-                               FontSize="13"
-                               VerticalAlignment="Center"
-                               Margin="12,0"
-                               TextTrimming="CharacterEllipsis"/>
-                </Border>
+                    <Border Grid.Column="0"
+                            Background="{StaticResource FondoBox}"
+                            BorderBrush="{StaticResource Borde}"
+                            BorderThickness="0,0,0,2"
+                            CornerRadius="6,6,0,0"
+                            Height="44">
+                        <TextBlock x:Name="txtLogoRuta"
+                                   Text="Sin logo seleccionado"
+                                   Foreground="#999999"
+                                   FontSize="13"
+                                   VerticalAlignment="Center"
+                                   Margin="12,0"
+                                   TextTrimming="CharacterEllipsis"/>
+                    </Border>
 
-                <Button Grid.Column="2"
-                        Content="📁  Seleccionar"
-                        Height="44"
-                        Padding="18,0"
-                        Cursor="Hand"
-                        FontSize="14" FontWeight="Bold"
+                    <Button Grid.Column="2"
+                            Content="📁  Seleccionar"
+                            Height="44" Padding="16,0"
+                            Cursor="Hand"
+                            FontSize="14" FontWeight="Bold"
+                            Foreground="White"
+                            Background="{StaticResource Verde}"
+                            Click="SeleccionarLogo_Click">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border Background="{TemplateBinding Background}"
+                                        CornerRadius="8"
+                                        Padding="{TemplateBinding Padding}">
+                                    <ContentPresenter HorizontalAlignment="Center"
+                                                      VerticalAlignment="Center"/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Opacity" Value="0.85"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+                </Grid>
+
+                <!-- Separador -->
+                <Border Height="1" Background="{StaticResource Borde}" Margin="0,0,0,22"/>
+
+                <!-- Botón guardar -->
+                <Button x:Name="btnGuardar"
+                        Content="💾   Guardar Datos de Empresa"
+                        Height="52" Width="290"
+                        HorizontalAlignment="Left"
+                        FontSize="16" FontWeight="Bold"
                         Foreground="White"
                         Background="{StaticResource Verde}"
-                        Click="SeleccionarLogo_Click">
+                        Click="GuardarEmpresa_Click">
                     <Button.Template>
                         <ControlTemplate TargetType="Button">
                             <Border Background="{TemplateBinding Background}"
-                                    CornerRadius="8"
-                                    Padding="{TemplateBinding Padding}">
+                                    CornerRadius="10" Padding="20,0">
                                 <ContentPresenter HorizontalAlignment="Center"
                                                   VerticalAlignment="Center"/>
                             </Border>
@@ -132,67 +170,87 @@
                                 <Trigger Property="IsMouseOver" Value="True">
                                     <Setter Property="Opacity" Value="0.85"/>
                                 </Trigger>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter Property="Opacity" Value="0.70"/>
+                                </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
                     </Button.Template>
                 </Button>
+
+                <!-- Mensaje OK -->
+                <TextBlock x:Name="lblMensaje"
+                           Visibility="Collapsed"
+                           FontSize="14" FontWeight="Bold"
+                           Foreground="{StaticResource Verde}"
+                           Margin="0,16,0,0"
+                           Text="✔  Datos guardados correctamente."/>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- ── COLUMNA DERECHA: Preview del logo ─────────────── -->
+        <Border Grid.Column="1" Background="White">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Área del logo grande -->
+                <Border Grid.Row="0"
+                        Margin="32"
+                        CornerRadius="16"
+                        BorderBrush="{StaticResource Borde}"
+                        BorderThickness="2">
+                    <Grid>
+                        <!-- Placeholder cuando no hay logo -->
+                        <StackPanel x:Name="stackPlaceholder"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center">
+                            <TextBlock Text="🏢"
+                                       FontSize="64"
+                                       HorizontalAlignment="Center"
+                                       Margin="0,0,0,16"/>
+                            <TextBlock Text="Sin logo seleccionado"
+                                       FontSize="15"
+                                       Foreground="#AAAAAA"
+                                       HorizontalAlignment="Center"/>
+                            <TextBlock Text="Selecciona una imagen a la izquierda"
+                                       FontSize="12"
+                                       Foreground="#CCCCCC"
+                                       HorizontalAlignment="Center"
+                                       Margin="0,6,0,0"/>
+                        </StackPanel>
+
+                        <!-- Logo real -->
+                        <Image x:Name="imgLogoGrande"
+                               Stretch="Uniform"
+                               Margin="24"
+                               Visibility="Collapsed"
+                               RenderOptions.BitmapScalingMode="HighQuality"/>
+                    </Grid>
+                </Border>
+
+                <!-- Nombre de empresa debajo del logo -->
+                <StackPanel Grid.Row="1"
+                            HorizontalAlignment="Center"
+                            Margin="0,0,0,28">
+                    <TextBlock x:Name="lblNombrePreview"
+                               FontSize="18" FontWeight="Bold"
+                               Foreground="#2D6A27"
+                               HorizontalAlignment="Center"
+                               TextAlignment="Center"
+                               TextWrapping="Wrap"
+                               Margin="20,0"/>
+                    <TextBlock x:Name="lblUbicacionPreview"
+                               FontSize="13"
+                               Foreground="#777777"
+                               HorizontalAlignment="Center"
+                               TextAlignment="Center"
+                               Margin="0,4,0,0"/>
+                </StackPanel>
             </Grid>
-
-            <!-- Preview del logo -->
-            <Border x:Name="borderLogo"
-                    Width="180" Height="110"
-                    HorizontalAlignment="Left"
-                    BorderBrush="{StaticResource Borde}"
-                    BorderThickness="1"
-                    CornerRadius="8"
-                    Margin="0,0,0,28"
-                    Visibility="Collapsed">
-                <Image x:Name="imgLogo"
-                       Stretch="Uniform"
-                       RenderOptions.BitmapScalingMode="HighQuality"/>
-            </Border>
-
-            <!-- Separador -->
-            <Border Height="1" Background="{StaticResource Borde}" Margin="0,0,0,24"/>
-
-            <!-- Botón guardar -->
-            <Button x:Name="btnGuardar"
-                    Content="💾   Guardar Datos de Empresa"
-                    Height="52"
-                    Width="290"
-                    HorizontalAlignment="Left"
-                    FontSize="16" FontWeight="Bold"
-                    Foreground="White"
-                    Background="{StaticResource Verde}"
-                    Click="GuardarEmpresa_Click">
-                <Button.Template>
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}"
-                                CornerRadius="10"
-                                Padding="20,0">
-                            <ContentPresenter HorizontalAlignment="Center"
-                                              VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Opacity" Value="0.85"/>
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter Property="Opacity" Value="0.70"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Button.Template>
-            </Button>
-
-            <!-- Mensaje OK -->
-            <TextBlock x:Name="lblMensaje"
-                       Visibility="Collapsed"
-                       FontSize="14" FontWeight="Bold"
-                       Foreground="{StaticResource Verde}"
-                       Margin="0,16,0,0"
-                       Text="✔  Datos guardados correctamente."/>
-
-        </StackPanel>
-    </ScrollViewer>
+        </Border>
+    </Grid>
 </UserControl>

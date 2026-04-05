@@ -1,26 +1,31 @@
-﻿using SeymuPriceCalculator.Models;
+﻿using Microsoft.Data.Sqlite;
+using SeymuPriceCalculator.Database;
+using SeymuPriceCalculator.Models;
+using SeymuPriceCalculator.Views;
+using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Drawing;
+using System.Drawing.Printing;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using SeymuPriceCalculator.Database;
-using Microsoft.Data.Sqlite;
-using System.Drawing;
-using System.Drawing.Printing;
-using SeymuPriceCalculator.Views;
-using System;
-using System.IO;
 using System.Windows.Media.Imaging;
+using System.Windows.Threading;
+using SeymuPriceCalculator.Services;
+using System.Threading.Tasks;
 
 namespace SeymuPriceCalculator
 {
     public partial class MainWindow : Window
     {
-        private ObservableCollection<Pieza> piezas = new ObservableCollection<Pieza>();
+        private ObservableCollection<Pieza> piezas = new();
         private Pieza? piezaEnEdicion = null;
+        private List<ClienteDB> _clientesGuardados = new();
 
         public MainWindow()
         {
@@ -28,6 +33,44 @@ namespace SeymuPriceCalculator
             DatabaseService.Initialize();
             dgPiezas.ItemsSource = piezas;
             CargarDatosEmpresa();
+            CargarComboBoxes();
+            CargarClientesGuardados();
+            SeymuPriceCalculator.Database.NeonService.CargarConfiguracion();
+            _ = SincronizarAsync();
+        }
+
+        private async Task SincronizarAsync()
+        {
+            ActualizarBadgeSync("⟳  Sincronizando...", "#AAFFAA");
+
+            var result = await SyncService.SincronizarAsync();
+
+            Dispatcher.Invoke(() =>
+            {
+                if (result.Exitoso)
+                {
+                    string badge = result.Subidos > 0 || result.Descargados > 0
+                        ? $"✔  ↑{result.Subidos}  ↓{result.Descargados}"
+                        : "✔  Sincronizado";
+                    ActualizarBadgeSync(badge, "#CCFFCC");
+
+                    // Si bajaron cotizaciones nuevas, recargar clientes
+                    if (result.Descargados > 0)
+                        CargarClientesGuardados();
+                }
+                else
+                {
+                    ActualizarBadgeSync("○  Sin conexión", "#AAAAAA");
+                }
+            });
+        }
+
+        private void ActualizarBadgeSync(string texto, string hex)
+        {
+            lblSync.Text = texto;
+            lblSync.Foreground = new System.Windows.Media.SolidColorBrush(
+                (System.Windows.Media.Color)System.Windows.Media.ColorConverter
+                    .ConvertFromString(hex));
         }
 
         // ========================= EMPRESA =========================
@@ -56,6 +99,7 @@ namespace SeymuPriceCalculator
                     imgLogoEmpresa.Source = bmp;
                     imgLogoEmpresa.Visibility = Visibility.Visible;
                     txtLetraLogo.Visibility = Visibility.Collapsed;
+                    this.Icon = bmp;
                 }
                 catch
                 {
@@ -68,6 +112,206 @@ namespace SeymuPriceCalculator
                 imgLogoEmpresa.Visibility = Visibility.Collapsed;
                 txtLetraLogo.Visibility = Visibility.Visible;
             }
+
+            this.Title = string.IsNullOrWhiteSpace(emp.Nombre)
+                         ? "Seymu — Calculadora de Madera"
+                         : $"{emp.Nombre} — Calculadora de Madera";
+        }
+
+        // ========================= COMBOBOXES DINÁMICOS =========================
+        public void CargarComboBoxes()
+        {
+            var maderas = DatabaseService.GetTiposMadera();
+            cmbMadera.Items.Clear();
+            foreach (var m in maderas)
+                cmbMadera.Items.Add(new ComboBoxItem { Content = m });
+            if (cmbMadera.Items.Count > 0)
+                cmbMadera.SelectedIndex = 0;
+
+            var grosores = DatabaseService.GetGrosores();
+            cmbGrosor.Items.Clear();
+            foreach (var g in grosores)
+                cmbGrosor.Items.Add(new ComboBoxItem
+                {
+                    Content = g.ToString(CultureInfo.InvariantCulture)
+                });
+            if (cmbGrosor.Items.Count > 0)
+                cmbGrosor.SelectedIndex = 0;
+        }
+
+        // ========================= CLIENTES GUARDADOS =========================
+        public void CargarClientesGuardados()
+        {
+            _clientesGuardados = DatabaseService.GetClientes();
+        }
+
+        // ── Filtra mientras escribe en Nombre ─────────────────
+        private void txtNombre_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            string texto = txtNombre.Text.Trim().ToLower();
+
+            if (texto.Length < 1)
+            {
+                popupNombre.IsOpen = false;
+                return;
+            }
+
+            var coincidencias = _clientesGuardados
+                .Where(c => c.Nombre.ToLower().Contains(texto))
+                .Take(6)
+                .ToList();
+
+            if (coincidencias.Count == 0)
+            {
+                popupNombre.IsOpen = false;
+                return;
+            }
+
+            lstSugerenciasNombre.ItemsSource = coincidencias;
+            popupNombre.IsOpen = true;
+        }
+
+        // ── Filtra mientras escribe en Teléfono ───────────────
+        private void txtTelefono_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            string texto = txtTelefono.Text.Trim();
+
+            if (texto.Length < 1)
+            {
+                popupTelefono.IsOpen = false;
+                return;
+            }
+
+            var coincidencias = _clientesGuardados
+                .Where(c => c.Telefono.Contains(texto) ||
+                            c.Nombre.ToLower().Contains(texto.ToLower()))
+                .Take(6)
+                .ToList();
+
+            if (coincidencias.Count == 0)
+            {
+                popupTelefono.IsOpen = false;
+                return;
+            }
+
+            lstSugerenciasTelefono.ItemsSource = coincidencias;
+            popupTelefono.IsOpen = true;
+        }
+
+        // ── Seleccionar sugerencia de Nombre ──────────────────
+        private void lstSugerenciasNombre_SelectionChanged(object sender,
+            SelectionChangedEventArgs e)
+        {
+            if (lstSugerenciasNombre.SelectedItem is not ClienteDB c) return;
+
+            txtNombre.TextChanged -= txtNombre_TextChanged;
+            txtTelefono.TextChanged -= txtTelefono_TextChanged;
+
+            txtNombre.Text = c.Nombre;
+            txtTelefono.Text = c.Telefono;
+
+            txtNombre.TextChanged += txtNombre_TextChanged;
+            txtTelefono.TextChanged += txtTelefono_TextChanged;
+
+            popupNombre.IsOpen = false;
+            lstSugerenciasNombre.SelectedItem = null;
+
+            txtTelefono.Focus();
+            txtTelefono.CaretIndex = txtTelefono.Text.Length;
+        }
+
+        // ── Seleccionar sugerencia de Teléfono ────────────────
+        private void lstSugerenciasTelefono_SelectionChanged(object sender,
+            SelectionChangedEventArgs e)
+        {
+            if (lstSugerenciasTelefono.SelectedItem is not ClienteDB c) return;
+
+            txtNombre.TextChanged -= txtNombre_TextChanged;
+            txtTelefono.TextChanged -= txtTelefono_TextChanged;
+
+            txtNombre.Text = c.Nombre;
+            txtTelefono.Text = c.Telefono;
+
+            txtNombre.TextChanged += txtNombre_TextChanged;
+            txtTelefono.TextChanged += txtTelefono_TextChanged;
+
+            popupTelefono.IsOpen = false;
+            lstSugerenciasTelefono.SelectedItem = null;
+
+            txtTelefono.Focus();
+            txtTelefono.CaretIndex = txtTelefono.Text.Length;
+        }
+
+        // ── Cerrar popup al perder foco ───────────────────────
+        private void txtNombre_LostFocus(object sender, RoutedEventArgs e)
+        {
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                if (!lstSugerenciasNombre.IsKeyboardFocusWithin)
+                    popupNombre.IsOpen = false;
+            }), DispatcherPriority.Background);
+        }
+
+        private void txtTelefono_LostFocus(object sender, RoutedEventArgs e)
+        {
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                if (!lstSugerenciasTelefono.IsKeyboardFocusWithin)
+                    popupTelefono.IsOpen = false;
+            }), DispatcherPriority.Background);
+        }
+
+        // ── Flechas y Escape en campo Nombre ──────────────────
+        private void txtNombre_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (!popupNombre.IsOpen) return;
+
+            if (e.Key == Key.Down)
+            {
+                lstSugerenciasNombre.Focus();
+                if (lstSugerenciasNombre.Items.Count > 0)
+                    lstSugerenciasNombre.SelectedIndex = 0;
+                e.Handled = true;
+            }
+            else if (e.Key == Key.Escape)
+            {
+                popupNombre.IsOpen = false;
+                e.Handled = true;
+            }
+        }
+
+        // ── Flechas y Escape en campo Teléfono ────────────────
+        private void txtTelefono_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (!popupTelefono.IsOpen) return;
+
+            if (e.Key == Key.Down)
+            {
+                lstSugerenciasTelefono.Focus();
+                if (lstSugerenciasTelefono.Items.Count > 0)
+                    lstSugerenciasTelefono.SelectedIndex = 0;
+                e.Handled = true;
+            }
+            else if (e.Key == Key.Escape)
+            {
+                popupTelefono.IsOpen = false;
+                e.Handled = true;
+            }
+        }
+
+        // ── Enter en la lista selecciona el item ──────────────
+        private void lstSugerencias_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key != Key.Enter) return;
+
+            if (sender is ListBox lb)
+            {
+                if (lb == lstSugerenciasNombre)
+                    lstSugerenciasNombre_SelectionChanged(lb, null!);
+                else
+                    lstSugerenciasTelefono_SelectionChanged(lb, null!);
+            }
+            e.Handled = true;
         }
 
         // ========================= CONFIGURACIÓN =========================
@@ -76,6 +320,9 @@ namespace SeymuPriceCalculator
             var ventana = new ConfiguracionWindow();
             ventana.Owner = this;
             ventana.ShowDialog();
+            CargarDatosEmpresa();
+            CargarClientesGuardados();
+            CargarComboBoxes();
         }
 
         // ========================= MENSAJES =========================
@@ -155,8 +402,7 @@ namespace SeymuPriceCalculator
                     pc.CommandText = @"
                         INSERT INTO Piezas
                         (CotizacionId, TipoMadera, Anchos, Largo, TotalAncho, Grosor, Pulgadas, Precio, Total)
-                        VALUES
-                        ($cid, $tipo, $anchos, $largo, $tancho, $grosor, $pulg, $precio, $total)
+                        VALUES ($cid,$tipo,$anchos,$largo,$tancho,$grosor,$pulg,$precio,$total)
                     ";
                     pc.Parameters.AddWithValue("$cid", cotizacionId);
                     pc.Parameters.AddWithValue("$tipo", pieza.TipoMadera);
@@ -193,7 +439,6 @@ namespace SeymuPriceCalculator
                         $"Guardada correctamente, pero no se pudo imprimir.\n\n" +
                         $"Número: {numFactura}\nMotivo: {detalleImpresion}");
 
-                // Limpiar
                 piezas.Clear();
                 txtNombre.Clear();
                 txtTelefono.Clear();
@@ -216,8 +461,9 @@ namespace SeymuPriceCalculator
             foreach (string p in PrinterSettings.InstalledPrinters)
             {
                 string n = p.ToLower();
-                if (n.Contains("aon") || n.Contains("pr-100b") || n.Contains("thermal") ||
-                    n.Contains("receipt") || n.Contains("pos") || n.Contains("58"))
+                if (n.Contains("aon") || n.Contains("pr-100b") ||
+                    n.Contains("thermal") || n.Contains("receipt") ||
+                    n.Contains("pos") || n.Contains("58"))
                     return p;
             }
             return string.Empty;
@@ -241,7 +487,8 @@ namespace SeymuPriceCalculator
                 Font fTotal = new Font("Consolas", 10, System.Drawing.FontStyle.Bold);
                 float y = 10;
 
-                string nombreEmp = string.IsNullOrWhiteSpace(emp.Nombre) ? "SEYMU" : emp.Nombre.ToUpper();
+                string nombreEmp = string.IsNullOrWhiteSpace(emp.Nombre)
+                                   ? "SEYMU" : emp.Nombre.ToUpper();
                 e.Graphics.DrawString(nombreEmp, fTitulo, Brushes.Black, 55, y); y += 25;
 
                 if (!string.IsNullOrWhiteSpace(emp.Ubicacion))
@@ -263,9 +510,10 @@ namespace SeymuPriceCalculator
 
                 foreach (var pieza in piezas)
                 {
-                    string linea = $"{pieza.TipoMadera.PadRight(8)}" +
-                                   $"{pieza.TotalBase.ToString("0").PadLeft(5)}" +
-                                   $"{pieza.Total.ToString("₡0").PadLeft(8)}";
+                    string linea =
+                        $"{pieza.TipoMadera.PadRight(8)}" +
+                        $"{pieza.TotalBase.ToString("0").PadLeft(5)}" +
+                        $"{pieza.Total.ToString("₡0").PadLeft(8)}";
                     e.Graphics.DrawString(linea, f, Brushes.Black, 10, y); y += 18;
                 }
 
@@ -289,7 +537,8 @@ namespace SeymuPriceCalculator
         // ========================= AGREGAR =========================
         private void AgregarPieza_Click(object sender, RoutedEventArgs e)
         {
-            if (!ValidarFormulario(out double largo, out double precio, out double grosor, out double totalAncho))
+            if (!ValidarFormulario(out double largo, out double precio,
+                                   out double grosor, out double totalAncho))
                 return;
 
             string tipoMadera = (cmbMadera.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "";
@@ -331,7 +580,8 @@ namespace SeymuPriceCalculator
         private void GuardarEdicion_Click(object sender, RoutedEventArgs e)
         {
             if (piezaEnEdicion == null) return;
-            if (!ValidarFormulario(out double largo, out double precio, out double grosor, out double totalAncho))
+            if (!ValidarFormulario(out double largo, out double precio,
+                                   out double grosor, out double totalAncho))
                 return;
 
             string tipoMadera = (cmbMadera.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "";
@@ -351,15 +601,12 @@ namespace SeymuPriceCalculator
         private void CancelarEdicion_Click(object sender, RoutedEventArgs e)
             => LimpiarFormulario();
 
-        // ── UN SOLO LimpiarFormulario ────────────────────────
         private void LimpiarFormulario()
         {
             piezaEnEdicion = null;
-
             txtLargo.Clear();
             txtAnchos.Clear();
             txtPrecio.Clear();
-
             btnAgregar.Visibility = Visibility.Visible;
             panelEdicion.Visibility = Visibility.Collapsed;
         }
@@ -402,8 +649,8 @@ namespace SeymuPriceCalculator
                 MostrarAdvertencia("Dato inválido", "Seleccione un grosor.");
                 cmbGrosor.Focus(); return false;
             }
-            grosor = double.Parse(grosorItem.Content?.ToString() ?? "0",
-                                  CultureInfo.InvariantCulture);
+            string grosorTexto = grosorItem.Content?.ToString() ?? "0";
+            grosor = double.Parse(grosorTexto, CultureInfo.InvariantCulture);
 
             if (string.IsNullOrWhiteSpace(txtAnchos.Text))
             {
