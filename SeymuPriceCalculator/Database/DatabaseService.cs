@@ -83,6 +83,7 @@ namespace SeymuPriceCalculator.Database
 
             // Migración para sync: agrega columnas si no existen
             MigrarParaSync(conn);
+            LimpiarClientesDuplicados(conn);
         }
 
         // ── Agrega columnas UUID a tablas existentes ──────────
@@ -454,15 +455,79 @@ namespace SeymuPriceCalculator.Database
         {
             using var conn = GetConnection();
             conn.Open();
-            var cmd = conn.CreateCommand();
-            // Solo insertar si el UUID no existe
-            cmd.CommandText = @"
-                INSERT OR IGNORE INTO Clientes (Uuid, Nombre, Telefono)
-                VALUES (@uuid, @n, @t);";
-            cmd.Parameters.AddWithValue("@uuid", c.Uuid);
-            cmd.Parameters.AddWithValue("@n", c.Nombre);
-            cmd.Parameters.AddWithValue("@t", c.Telefono);
-            cmd.ExecuteNonQuery();
+
+            // 1. Si ya existe ese UUID localmente, solo actualiza el nombre/teléfono
+            var checkUuid = new SqliteCommand(
+                "SELECT Id FROM Clientes WHERE Uuid = @uuid;", conn);
+            checkUuid.Parameters.AddWithValue("@uuid", c.Uuid);
+            var existeUuid = checkUuid.ExecuteScalar();
+
+            if (existeUuid != null)
+            {
+                // Ya existe, actualizar por si cambió nombre o teléfono
+                var upd = new SqliteCommand(
+                    "UPDATE Clientes SET Nombre=@n, Telefono=@t WHERE Uuid=@uuid;", conn);
+                upd.Parameters.AddWithValue("@n", c.Nombre);
+                upd.Parameters.AddWithValue("@t", c.Telefono);
+                upd.Parameters.AddWithValue("@uuid", c.Uuid);
+                upd.ExecuteNonQuery();
+                return;
+            }
+
+            // 2. Si ya existe mismo nombre+teléfono (cliente local sin UUID de Neon),
+            //    solo asignarle el UUID de Neon — no insertar duplicado
+            var checkNombre = new SqliteCommand(@"
+        SELECT Id FROM Clientes
+        WHERE LOWER(TRIM(Nombre))   = LOWER(TRIM(@n))
+          AND LOWER(TRIM(Telefono)) = LOWER(TRIM(@t))
+        LIMIT 1;", conn);
+            checkNombre.Parameters.AddWithValue("@n", c.Nombre);
+            checkNombre.Parameters.AddWithValue("@t", c.Telefono);
+            var existeNombre = checkNombre.ExecuteScalar();
+
+            if (existeNombre != null)
+            {
+                // Asignar el UUID de Neon al registro local existente
+                var upd = new SqliteCommand(
+                    "UPDATE Clientes SET Uuid=@uuid WHERE Id=@id;", conn);
+                upd.Parameters.AddWithValue("@uuid", c.Uuid);
+                upd.Parameters.AddWithValue("@id", existeNombre);
+                upd.ExecuteNonQuery();
+                return;
+            }
+
+            // 3. Es un cliente genuinamente nuevo — insertar
+            var ins = new SqliteCommand(
+                "INSERT INTO Clientes (Uuid, Nombre, Telefono) VALUES (@uuid, @n, @t);", conn);
+            ins.Parameters.AddWithValue("@uuid", c.Uuid);
+            ins.Parameters.AddWithValue("@n", c.Nombre);
+            ins.Parameters.AddWithValue("@t", c.Telefono);
+            ins.ExecuteNonQuery();
+        }
+
+        private static void LimpiarClientesDuplicados(SqliteConnection conn)
+        {
+            // Elimina duplicados por nombre+teléfono, conservando el registro con UUID
+            var cmd = new SqliteCommand(@"
+        DELETE FROM Clientes
+        WHERE Id NOT IN (
+            SELECT MIN(CASE WHEN Uuid IS NOT NULL AND Uuid != '' THEN Id ELSE 99999999 END)
+            FROM Clientes
+            GROUP BY LOWER(TRIM(Nombre)), LOWER(TRIM(Telefono))
+        )
+        AND Id IN (
+            SELECT Id FROM Clientes
+            WHERE (LOWER(TRIM(Nombre)), LOWER(TRIM(Telefono))) IN (
+                SELECT LOWER(TRIM(Nombre)), LOWER(TRIM(Telefono))
+                FROM Clientes
+                GROUP BY LOWER(TRIM(Nombre)), LOWER(TRIM(Telefono))
+                HAVING COUNT(*) > 1
+            )
+        );
+    ", conn);
+
+            try { cmd.ExecuteNonQuery(); }
+            catch { }
         }
     }
 }

@@ -91,7 +91,9 @@
 
                 <!-- Teléfono -->
                 <TextBlock Text="TELÉFONO" Style="{StaticResource Lbl}"/>
-                <TextBox x:Name="txtTelefono"/>
+                <TextBox x:Name="txtTelefono"
+                PreviewTextInput="SoloNumeros"
+         DataObject.Pasting="Telefono_Pasting"/>
 
                 <!-- Correo -->
                 <TextBlock Text="CORREO ELECTRÓNICO" Style="{StaticResource Lbl}"/>

@@ -207,5 +207,24 @@ namespace SeymuPriceCalculator.Views
 
             lblMensaje.Visibility = Visibility.Visible;
         }
+
+        // ── Solo números en el campo teléfono ────────────────
+        private void SoloNumeros(object sender, System.Windows.Input.TextCompositionEventArgs e)
+            => e.Handled = !System.Text.RegularExpressions.Regex.IsMatch(e.Text, @"^[0-9]+$");
+
+        // ── Bloquea pegar texto no numérico ──────────────────
+        private void Telefono_Pasting(object sender, DataObjectPastingEventArgs e)
+        {
+            if (e.DataObject.GetDataPresent(typeof(string)))
+            {
+                string texto = (string)e.DataObject.GetData(typeof(string));
+                if (!System.Text.RegularExpressions.Regex.IsMatch(texto, @"^[0-9]+$"))
+                    e.CancelCommand();
+            }
+            else
+            {
+                e.CancelCommand();
+            }
+        }
     }
 }

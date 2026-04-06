@@ -13,32 +13,32 @@
         <SolidColorBrush x:Key="Borde"    Color="#DEDEDE"/>
         <SolidColorBrush x:Key="FondoBox" Color="#F5F5F5"/>
 
-        <!-- Pega esto dentro de <UserControl.Resources> junto a los otros estilos -->
-
         <Style TargetType="DatePickerTextBox">
-            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontSize" Value="16"/>
         </Style>
 
         <Style TargetType="CalendarDayButton">
-            <Setter Property="Width"    Value="38"/>
-            <Setter Property="Height"   Value="38"/>
-            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Width"    Value="52"/>
+            <Setter Property="Height"   Value="52"/>
+            <Setter Property="FontSize" Value="17"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
         </Style>
 
         <Style TargetType="CalendarButton">
-            <Setter Property="Width"    Value="76"/>
-            <Setter Property="Height"   Value="38"/>
-            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Width"    Value="104"/>
+            <Setter Property="Height"   Value="52"/>
+            <Setter Property="FontSize" Value="17"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
         </Style>
 
         <Style TargetType="Calendar">
-            <Setter Property="Width"    Value="320"/>
-            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Width"    Value="420"/>
+            <Setter Property="FontSize" Value="17"/>
         </Style>
 
         <Style TargetType="CalendarItem">
-            <Setter Property="Width"  Value="320"/>
-            <Setter Property="Height" Value="280"/>
+            <Setter Property="Width"  Value="420"/>
+            <Setter Property="Height" Value="380"/>
         </Style>
 
         <!-- TextBox de búsqueda -->
