@@ -1,4 +1,4 @@
-﻿namespace SeymuPriceCalculator.Models
+namespace SeymuPriceCalculator.Models
 {
     public class Empresa
     {
@@ -8,5 +8,6 @@
         public string Telefono { get; set; } = "";
         public string Correo { get; set; } = "";
         public string LogoPath { get; set; } = "";
+        public string Impresora { get; set; } = "";
     }
 }

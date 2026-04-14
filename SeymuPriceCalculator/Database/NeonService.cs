@@ -1,4 +1,4 @@
-﻿using Npgsql;
+using Npgsql;
 using SeymuPriceCalculator.Models;
 using System;
 using System.Collections.Generic;
@@ -324,6 +324,35 @@ namespace SeymuPriceCalculator.Database   // ← Database, no Services
                     Telefono = r.IsDBNull(2) ? "" : r.GetString(2),
                 });
             }
+        }
+
+        public static async Task DescargarEmpresaAsync()
+        {
+            if (!EstaConfigurado) return;
+
+            try
+            {
+                await using var conn = new NpgsqlConnection(_cs);
+                await conn.OpenAsync();
+
+                await using var cmd = new NpgsqlCommand(
+                    "SELECT nombre, ubicacion, telefono, correo FROM empresa WHERE id = 1;", conn);
+                await using var r = await cmd.ExecuteReaderAsync();
+
+                if (await r.ReadAsync())
+                {
+                    // Obtener empresa local para preservar el LogoPath local
+                    var empLocal = DatabaseService.ObtenerEmpresa();
+                    
+                    empLocal.Nombre = r.IsDBNull(0) ? "" : r.GetString(0);
+                    empLocal.Ubicacion = r.IsDBNull(1) ? "" : r.GetString(1);
+                    empLocal.Telefono = r.IsDBNull(2) ? "" : r.GetString(2);
+                    empLocal.Correo = r.IsDBNull(3) ? "" : r.GetString(3);
+
+                    DatabaseService.GuardarEmpresa(empLocal);
+                }
+            }
+            catch { }
         }
     }
 }

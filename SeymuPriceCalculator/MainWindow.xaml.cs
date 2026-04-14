@@ -1,4 +1,4 @@
-﻿using Microsoft.Data.Sqlite;
+using Microsoft.Data.Sqlite;
 using SeymuPriceCalculator.Database;
 using SeymuPriceCalculator.Models;
 using SeymuPriceCalculator.Views;
@@ -458,6 +458,16 @@ namespace SeymuPriceCalculator
         // ========================= IMPRESORA =========================
         private string DetectarImpresoraTermica()
         {
+            // 1. Intentar obtener la impresora guardada en la base de datos
+            var emp = DatabaseService.ObtenerEmpresa();
+            if (!string.IsNullOrEmpty(emp.Impresora))
+            {
+                // Verificar si la impresora guardada sigue instalada en el sistema
+                if (PrinterSettings.InstalledPrinters.Cast<string>().Any(p => p == emp.Impresora))
+                    return emp.Impresora;
+            }
+
+            // 2. Si no hay una guardada o no existe, proceder con la búsqueda automática
             foreach (string p in PrinterSettings.InstalledPrinters)
             {
                 string n = p.ToLower();
@@ -477,57 +487,112 @@ namespace SeymuPriceCalculator
             PrintDocument pd = new PrintDocument();
             pd.PrinterSettings.PrinterName = impresora;
             if (!pd.PrinterSettings.IsValid) return false;
-
             Empresa emp = DatabaseService.ObtenerEmpresa();
 
             pd.PrintPage += (sender, e) =>
             {
-                Font fTitulo = new Font("Consolas", 12, System.Drawing.FontStyle.Bold);
-                Font f = new Font("Consolas", 9);
-                Font fTotal = new Font("Consolas", 10, System.Drawing.FontStyle.Bold);
+                if (e.Graphics == null) return;
+                // Configuración de dimensiones para 58mm (aprox 200-210 unidades)
+                float width = 195; 
+                float margin = 2;
                 float y = 10;
 
-                string nombreEmp = string.IsNullOrWhiteSpace(emp.Nombre)
-                                   ? "SEYMU" : emp.Nombre.ToUpper();
-                e.Graphics.DrawString(nombreEmp, fTitulo, Brushes.Black, 55, y); y += 25;
+                Font fTitulo = new Font("Consolas", 11, System.Drawing.FontStyle.Bold);
+                Font f = new Font("Consolas", 8.5f);
+                Font fBold = new Font("Consolas", 8.5f, System.Drawing.FontStyle.Bold);
+                Font fTotal = new Font("Consolas", 10, System.Drawing.FontStyle.Bold);
+                
+                StringFormat sfCenter = new StringFormat { Alignment = StringAlignment.Center };
+                StringFormat sfRight = new StringFormat { Alignment = StringAlignment.Far };
+
+                // --- ENCABEZADO (EMPRESA) ---
+                string nombreEmp = string.IsNullOrWhiteSpace(emp.Nombre) ? "SEYMU" : emp.Nombre.ToUpper();
+                RectangleF rectNombre = new RectangleF(margin, y, width - (margin * 2), 40);
+                e.Graphics.DrawString(nombreEmp, fTitulo, Brushes.Black, rectNombre, sfCenter);
+                y += e.Graphics.MeasureString(nombreEmp, fTitulo, (int)width).Height + 2;
 
                 if (!string.IsNullOrWhiteSpace(emp.Ubicacion))
-                { e.Graphics.DrawString(emp.Ubicacion, f, Brushes.Black, 10, y); y += 18; }
-                if (!string.IsNullOrWhiteSpace(emp.Telefono))
-                { e.Graphics.DrawString($"Tel: {emp.Telefono}", f, Brushes.Black, 10, y); y += 18; }
-                if (!string.IsNullOrWhiteSpace(emp.Correo))
-                { e.Graphics.DrawString(emp.Correo, f, Brushes.Black, 10, y); y += 18; }
-
-                e.Graphics.DrawString("--------------------------------", f, Brushes.Black, 10, y); y += 18;
-                e.Graphics.DrawString($"Cotización: {numeroFactura}", f, Brushes.Black, 10, y); y += 18;
-                e.Graphics.DrawString($"Fecha: {DateTime.Now:dd/MM/yyyy HH:mm}", f, Brushes.Black, 10, y); y += 18;
-                e.Graphics.DrawString($"Cliente: {txtNombre.Text}", f, Brushes.Black, 10, y); y += 18;
-                e.Graphics.DrawString($"Tel: {txtTelefono.Text}", f, Brushes.Black, 10, y); y += 22;
-
-                e.Graphics.DrawString("--------------------------------", f, Brushes.Black, 10, y); y += 18;
-                e.Graphics.DrawString("Madera   Pulg   Total", f, Brushes.Black, 10, y); y += 18;
-                e.Graphics.DrawString("--------------------------------", f, Brushes.Black, 10, y); y += 20;
-
-                foreach (var pieza in piezas)
                 {
-                    string linea =
-                        $"{pieza.TipoMadera.PadRight(8)}" +
-                        $"{pieza.TotalBase.ToString("0").PadLeft(5)}" +
-                        $"{pieza.Total.ToString("₡0").PadLeft(8)}";
-                    e.Graphics.DrawString(linea, f, Brushes.Black, 10, y); y += 18;
+                    RectangleF rectUbi = new RectangleF(margin, y, width - (margin * 2), 60);
+                    e.Graphics.DrawString(emp.Ubicacion, f, Brushes.Black, rectUbi, sfCenter);
+                    y += e.Graphics.MeasureString(emp.Ubicacion, f, (int)width).Height + 2;
                 }
 
+                if (!string.IsNullOrWhiteSpace(emp.Telefono))
+                {
+                    e.Graphics.DrawString($"Tel: {emp.Telefono}", f, Brushes.Black, new RectangleF(margin, y, width, 20), sfCenter);
+                    y += 15;
+                }
+
+                if (!string.IsNullOrWhiteSpace(emp.Correo))
+                {
+                    RectangleF rectCorreo = new RectangleF(margin, y, width - (margin * 2), 40);
+                    e.Graphics.DrawString(emp.Correo, f, Brushes.Black, rectCorreo, sfCenter);
+                    y += e.Graphics.MeasureString(emp.Correo, f, (int)width).Height + 5;
+                }
+
+                string separator = new string('-', 32);
+                e.Graphics.DrawString(separator, f, Brushes.Black, margin, y); y += 15;
+
+                // --- INFO COMPRA ---
+                e.Graphics.DrawString($"Tickete: {numeroFactura}", fBold, Brushes.Black, margin, y); y += 15;
+                e.Graphics.DrawString($"Fecha: {DateTime.Now:dd/MM/yyyy HH:mm}", f, Brushes.Black, margin, y); y += 15;
+                
+                string clienteStr = $"Cliente: {txtNombre.Text}";
+                RectangleF rectCliente = new RectangleF(margin, y, width - (margin * 2), 40);
+                e.Graphics.DrawString(clienteStr, f, Brushes.Black, rectCliente);
+                float clienteHeight = e.Graphics.MeasureString(clienteStr, f, (int)width).Height;
+                y += clienteHeight + 2;
+                if (!string.IsNullOrWhiteSpace(txtTelefono.Text))
+                {
+                    e.Graphics.DrawString($"Tel: {txtTelefono.Text}", f, Brushes.Black, margin, y); y += 15;
+                }
+
+                y += 5;
+                e.Graphics.DrawString(separator, f, Brushes.Black, margin, y); y += 15;
+
+                // --- CABECERA TABLA ---
+                e.Graphics.DrawString("Madera", fBold, Brushes.Black, margin, y);
+                e.Graphics.DrawString("Pulg", fBold, Brushes.Black, 110, y, sfRight);
+                e.Graphics.DrawString("Total", fBold, Brushes.Black, width - margin, y, sfRight);
+                y += 15;
+                e.Graphics.DrawString(separator, f, Brushes.Black, margin, y); y += 15;
+
+                // --- DETALLE PIEZAS ---
+                foreach (var pieza in piezas)
+                {
+                    string madera = pieza.TipoMadera;
+                    float maderaHeight = e.Graphics.MeasureString(madera, f, 100).Height;
+                    e.Graphics.DrawString(madera, f, Brushes.Black, new RectangleF(margin, y, 105, 40));
+                    
+                    e.Graphics.DrawString(pieza.TotalBase.ToString("N1"), f, Brushes.Black, 110, y, sfRight);
+                    e.Graphics.DrawString(pieza.Total.ToString("C0"), f, Brushes.Black, width - margin, y, sfRight);
+                    
+                    y += Math.Max(maderaHeight, 15);
+                }
+
+                // --- TOTALES ---
                 double sub = piezas.Sum(p => p.Total);
                 double iva = sub * 0.13;
                 double tfin = sub + iva;
 
                 y += 10;
-                e.Graphics.DrawString("--------------------------------", f, Brushes.Black, 10, y); y += 18;
-                e.Graphics.DrawString($"Subtotal: {sub:C}", f, Brushes.Black, 10, y); y += 18;
-                e.Graphics.DrawString($"IVA 13%:  {iva:C}", f, Brushes.Black, 10, y); y += 22;
-                e.Graphics.DrawString($"TOTAL: {tfin:C}", fTotal, Brushes.Black, 10, y); y += 25;
-                e.Graphics.DrawString("--------------------------------", f, Brushes.Black, 10, y); y += 18;
-                e.Graphics.DrawString("Gracias por su compra", f, Brushes.Black, 20, y);
+                e.Graphics.DrawString(separator, f, Brushes.Black, margin, y); y += 15;
+
+                e.Graphics.DrawString("Subtotal:", f, Brushes.Black, margin, y);
+                e.Graphics.DrawString(sub.ToString("C"), f, Brushes.Black, width - margin, y, sfRight);
+                y += 15;
+
+                e.Graphics.DrawString("IVA 13%:", f, Brushes.Black, margin, y);
+                e.Graphics.DrawString(iva.ToString("C"), f, Brushes.Black, width - margin, y, sfRight);
+                y += 20;
+
+                e.Graphics.DrawString("TOTAL:", fTotal, Brushes.Black, margin, y);
+                e.Graphics.DrawString(tfin.ToString("C"), fTotal, Brushes.Black, width - margin, y, sfRight);
+                y += 25;
+
+                e.Graphics.DrawString(separator, f, Brushes.Black, margin, y); y += 15;
+                e.Graphics.DrawString("Gracias por su preferencia", fBold, Brushes.Black, new RectangleF(margin, y, width, 20), sfCenter);
             };
 
             pd.Print();

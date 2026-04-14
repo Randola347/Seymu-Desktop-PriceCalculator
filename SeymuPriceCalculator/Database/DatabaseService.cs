@@ -1,4 +1,4 @@
-﻿using Microsoft.Data.Sqlite;
+using Microsoft.Data.Sqlite;
 using SeymuPriceCalculator.Models;
 using System;
 using System.Collections.Generic;
@@ -98,6 +98,7 @@ namespace SeymuPriceCalculator.Database
                 "ALTER TABLE Piezas ADD COLUMN CotizacionUuid TEXT",
                 "ALTER TABLE Piezas ADD COLUMN SyncPendiente INTEGER DEFAULT 1",
                 "ALTER TABLE Clientes ADD COLUMN Uuid TEXT",
+                "ALTER TABLE Empresa ADD COLUMN Impresora TEXT NOT NULL DEFAULT ''",
             };
 
             foreach (var sql in migraciones)
@@ -152,7 +153,7 @@ namespace SeymuPriceCalculator.Database
             using var conn = GetConnection();
             conn.Open();
             var cmd = conn.CreateCommand();
-            cmd.CommandText = "SELECT Id,Nombre,Ubicacion,Telefono,Correo,LogoPath FROM Empresa WHERE Id=1;";
+            cmd.CommandText = "SELECT Id,Nombre,Ubicacion,Telefono,Correo,LogoPath,Impresora FROM Empresa WHERE Id=1;";
             using var r = cmd.ExecuteReader();
             if (r.Read())
                 return new Empresa
@@ -163,6 +164,7 @@ namespace SeymuPriceCalculator.Database
                     Telefono = r.IsDBNull(3) ? "" : r.GetString(3),
                     Correo = r.IsDBNull(4) ? "" : r.GetString(4),
                     LogoPath = r.IsDBNull(5) ? "" : r.GetString(5),
+                    Impresora = r.IsDBNull(6) ? "" : r.GetString(6),
                 };
             return new Empresa();
         }
@@ -173,12 +175,13 @@ namespace SeymuPriceCalculator.Database
             conn.Open();
             var cmd = conn.CreateCommand();
             cmd.CommandText = @"UPDATE Empresa SET
-                Nombre=@n,Ubicacion=@u,Telefono=@t,Correo=@c,LogoPath=@l WHERE Id=1;";
+                Nombre=@n,Ubicacion=@u,Telefono=@t,Correo=@c,LogoPath=@l,Impresora=@i WHERE Id=1;";
             cmd.Parameters.AddWithValue("@n", e.Nombre);
             cmd.Parameters.AddWithValue("@u", e.Ubicacion);
             cmd.Parameters.AddWithValue("@t", e.Telefono);
             cmd.Parameters.AddWithValue("@c", e.Correo);
             cmd.Parameters.AddWithValue("@l", e.LogoPath);
+            cmd.Parameters.AddWithValue("@i", e.Impresora);
             cmd.ExecuteNonQuery();
         }
 

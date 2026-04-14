@@ -112,6 +112,13 @@ namespace SeymuPriceCalculator.Views
             ActualizarBotones(btnEmpresa);
         }
 
+        private void MostrarImpresora_Click(object sender, RoutedEventArgs e)
+        {
+            ContenidoPrincipal.Content = new ImpresoraView();
+            lblSeccionActual.Text = "🖨  Configuración de Impresora";
+            ActualizarBotones(btnImpresora);
+        }
+
         private void Cerrar_Click(object sender, RoutedEventArgs e)
             => Close();
 
@@ -123,6 +130,7 @@ namespace SeymuPriceCalculator.Views
             btnHistorial.Style = style;
             btnAdministrar.Style = style;
             btnEmpresa.Style = style;
+            btnImpresora.Style = style;
 
             activo.Style = styleActivo;
         }

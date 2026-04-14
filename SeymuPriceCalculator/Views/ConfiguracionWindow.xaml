@@ -162,6 +162,12 @@
                             Margin="0,0,0,4"
                             Click="MostrarEmpresa_Click"/>
 
+                    <Button x:Name="btnImpresora"
+                            Content="🖨  Impresora"
+                            Style="{StaticResource BtnMenu}"
+                            Margin="0,0,0,4"
+                            Click="MostrarImpresora_Click"/>
+
                     <Border Height="1"
                             Background="#FFFFFF22"
                             Margin="6,16,6,16"/>

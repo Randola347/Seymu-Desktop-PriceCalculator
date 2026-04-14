@@ -1,4 +1,4 @@
-﻿using SeymuPriceCalculator.Database;
+using SeymuPriceCalculator.Database;
 using SeymuPriceCalculator.Models;
 using System;
 using System.Threading.Tasks;
@@ -32,6 +32,7 @@ namespace SeymuPriceCalculator.Services
 
                 int cotizacionesDescargadas = await NeonService.DescargarCotizacionesAsync();
                 await NeonService.DescargarClientesAsync();
+                await NeonService.DescargarEmpresaAsync();
 
                 resultado.Descargados = cotizacionesDescargadas;
                 resultado.Exitoso = true;

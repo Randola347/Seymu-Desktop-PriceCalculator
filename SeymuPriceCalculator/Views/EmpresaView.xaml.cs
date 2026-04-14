@@ -7,6 +7,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using SeymuPriceCalculator.Services;
+using System.Threading.Tasks;
 
 namespace SeymuPriceCalculator.Views
 {
@@ -166,7 +168,7 @@ namespace SeymuPriceCalculator.Views
             return bmp;
         }
 
-        private void GuardarEmpresa_Click(object sender, RoutedEventArgs e)
+        private async void GuardarEmpresa_Click(object sender, RoutedEventArgs e)
         {
             if (string.IsNullOrWhiteSpace(txtNombre.Text))
             {
@@ -180,6 +182,11 @@ namespace SeymuPriceCalculator.Views
                 return;
             }
 
+            btnGuardar.IsEnabled = false;
+            lblMensaje.Visibility = Visibility.Collapsed;
+            lblSyncStatus.Text = "☁  Sincronizando con la nube...";
+            lblSyncStatus.Visibility = Visibility.Visible;
+
             var empresa = new Empresa
             {
                 Nombre = txtNombre.Text.Trim(),
@@ -189,7 +196,24 @@ namespace SeymuPriceCalculator.Views
                 LogoPath = _logoPath
             };
 
+            // 1. Guardar Local
             DatabaseService.GuardarEmpresa(empresa);
+
+            // 2. Sincronizar con Neon
+            var result = await SyncService.SincronizarAsync();
+
+            // 3. Feedback final
+            btnGuardar.IsEnabled = true;
+            if (result.Exitoso)
+            {
+                lblSyncStatus.Text = "✔  Sincronizado con la nube";
+                lblMensaje.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                lblSyncStatus.Text = "⚠  Guardado local, fallo sync: " + result.Mensaje;
+                lblMensaje.Visibility = Visibility.Visible;
+            }
 
             NombreCambiado?.Invoke(empresa.Nombre);
 
@@ -204,8 +228,6 @@ namespace SeymuPriceCalculator.Views
 
             if (!string.IsNullOrWhiteSpace(_logoPath) && File.Exists(_logoPath))
                 MostrarPreviewLocal(_logoPath);
-
-            lblMensaje.Visibility = Visibility.Visible;
         }
 
         // ── Solo números en el campo teléfono ────────────────

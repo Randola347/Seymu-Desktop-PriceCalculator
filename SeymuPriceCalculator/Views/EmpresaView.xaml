@@ -188,6 +188,14 @@
                            Margin="0,16,0,0"
                            Text="✔  Datos guardados correctamente."/>
 
+                <!-- Mensaje Sync Status -->
+                <TextBlock x:Name="lblSyncStatus"
+                           Visibility="Collapsed"
+                           FontSize="13" 
+                           Foreground="#666666"
+                           Margin="0,8,0,0"
+                           Text="☁  Sincronizando con la nube..."/>
+
             </StackPanel>
         </ScrollViewer>
 
