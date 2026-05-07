@@ -99,10 +99,13 @@ namespace SeymuPriceCalculator
                     imgLogoEmpresa.Source = bmp;
                     imgLogoEmpresa.Visibility = Visibility.Visible;
                     txtLetraLogo.Visibility = Visibility.Collapsed;
+
+                    // Cambia el icono de la ventana y de la barra de tareas en tiempo de ejecución
                     this.Icon = bmp;
                 }
-                catch
+                catch (Exception ex)
                 {
+                    System.Diagnostics.Debug.WriteLine("Error al cargar icono dinámico: " + ex.Message);
                     imgLogoEmpresa.Visibility = Visibility.Collapsed;
                     txtLetraLogo.Visibility = Visibility.Visible;
                 }
@@ -722,15 +725,39 @@ namespace SeymuPriceCalculator
                 MostrarAdvertencia("Dato inválido", "Ingrese al menos un ancho.");
                 txtAnchos.Focus(); return false;
             }
-            foreach (var parte in txtAnchos.Text.Split('-'))
+            // Reemplazar * o X por la x minúscula para facilitar el proceso
+            string anchosLimpio = txtAnchos.Text.ToLower().Replace('*', 'x');
+
+            foreach (var parte in anchosLimpio.Split('-'))
             {
-                if (!double.TryParse(parte.Trim(), NumberStyles.Any,
-                    CultureInfo.InvariantCulture, out double val) || val <= 0)
+                string p = parte.Trim();
+                if (string.IsNullOrWhiteSpace(p)) continue; // Por si escriben "10--5"
+
+                if (p.Contains("x"))
                 {
-                    MostrarAdvertencia("Dato inválido", "Formato de anchos inválido. Ej: 10-7-5");
-                    txtAnchos.Focus(); return false;
+                    var sub = p.Split('x');
+                    if (sub.Length == 2 &&
+                        int.TryParse(sub[0].Trim(), out int cantidad) && cantidad > 0 &&
+                        double.TryParse(sub[1].Trim(), NumberStyles.Any, CultureInfo.InvariantCulture, out double medida) && medida > 0)
+                    {
+                        totalAncho += (cantidad * medida);
+                    }
+                    else
+                    {
+                        MostrarAdvertencia("Dato inválido", $"Formato incorrecto en: '{parte}'. Ej: 5x10 o 10-7");
+                        txtAnchos.Focus(); return false;
+                    }
                 }
-                totalAncho += val;
+                else
+                {
+                    if (!double.TryParse(p, NumberStyles.Any,
+                        CultureInfo.InvariantCulture, out double val) || val <= 0)
+                    {
+                        MostrarAdvertencia("Dato inválido", $"Formato de anchos inválido en: '{parte}'. Ej: 10-7 o 5x10");
+                        txtAnchos.Focus(); return false;
+                    }
+                    totalAncho += val;
+                }
             }
             return true;
         }
@@ -762,6 +789,9 @@ namespace SeymuPriceCalculator
         private void SoloNumeros(object sender, TextCompositionEventArgs e)
             => e.Handled = !Regex.IsMatch(e.Text, @"^[0-9]+$");
 
+        private void SoloAnchos(object sender, TextCompositionEventArgs e)
+            => e.Handled = !Regex.IsMatch(e.Text, @"^[0-9xX*\.\-]+$");
+
         private void SoloDecimal(object sender, TextCompositionEventArgs e)
         {
             if (sender is TextBox tb && e.Text == "." && tb.Text.Contains("."))
@@ -769,7 +799,5 @@ namespace SeymuPriceCalculator
             e.Handled = !Regex.IsMatch(e.Text, @"^[0-9.]+$");
         }
 
-        private void SoloNumerosYGuion(object sender, TextCompositionEventArgs e)
-            => e.Handled = !Regex.IsMatch(e.Text, @"^[0-9-]+$");
     }
 }

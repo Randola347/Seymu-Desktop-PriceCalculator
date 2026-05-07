@@ -98,10 +98,8 @@ namespace SeymuPriceCalculator.Views
             if (dialog.ShowDialog() != true)
                 return;
 
-            string carpeta = Path.Combine(
-                AppDomain.CurrentDomain.BaseDirectory,
-                "Data",
-                "Assets");
+            string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            string carpeta = Path.Combine(appData, "SeymuCalculadora", "Assets");
 
             Directory.CreateDirectory(carpeta);
 

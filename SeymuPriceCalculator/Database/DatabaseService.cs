@@ -8,10 +8,16 @@ namespace SeymuPriceCalculator.Database
 {
     public static class DatabaseService
     {
-        private static string dbPath = "database.db";
+        private static string GetDbPath()
+        {
+            string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            string folder = Path.Combine(appData, "SeymuCalculadora");
+            if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
+            return Path.Combine(folder, "database.db");
+        }
 
         public static SqliteConnection GetConnection()
-            => new SqliteConnection($"Data Source={dbPath}");
+            => new SqliteConnection($"Data Source={GetDbPath()}");
 
         // ═══════════════════════════════════════════════════════
         // INICIALIZAR

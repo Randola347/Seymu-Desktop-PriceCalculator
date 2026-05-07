@@ -1,4 +1,4 @@
-﻿<Window x:Class="SeymuPriceCalculator.MainWindow"
+<Window x:Class="SeymuPriceCalculator.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Seymu — Calculadora de Madera"
@@ -539,7 +539,7 @@
                     <!-- Anchos -->
                     <StackPanel Grid.Row="3">
                         <TextBlock Text="ANCHOS" Style="{StaticResource LabelCampo}"/>
-                        <TextBox x:Name="txtAnchos" PreviewTextInput="SoloNumerosYGuion"/>
+                        <TextBox x:Name="txtAnchos" PreviewTextInput="SoloAnchos"/>
                     </StackPanel>
 
                     <!-- Grosor -->

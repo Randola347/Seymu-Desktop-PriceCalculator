@@ -1,3 +1,6 @@
 <Solution>
+  <Project Path="InstaladorSeymu/InstaladorSeymu.vdproj" Type="Installer">
+    <Build />
+  </Project>
   <Project Path="SeymuPriceCalculator/SeymuPriceCalculator.csproj" />
 </Solution>
