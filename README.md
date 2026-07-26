@@ -59,17 +59,11 @@ A typical demo flow is:
 ## 🔒 Demo Notes
 
 - This version is intended for portfolio/demo use only.
-- The company name is preserved as part of the public-facing brand identity.
-- The logo and branding remain available locally for presentation purposes.
 - Sensitive data should stay in your local `appsettings.json` file and is not committed to the repository.
 
 ## 📄 Documentation
 
 See [docs/demo.md](docs/demo.md) for details about the demo setup and data expectations.
-
-## 🎯 Why This Project Is Relevant
-
-This project demonstrates practical desktop application development, business logic implementation, local data persistence, and a complete quotation workflow in a compact and portfolio-friendly format.
 
 ---
 Developed for demo and portfolio purposes.
